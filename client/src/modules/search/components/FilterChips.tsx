@@ -1,5 +1,6 @@
 import { Select, Button } from '../../../shared/ui';
-import { STATUSES, STATUS_LABELS, PRIORITIES, PRIORITY_LABELS } from '@crm/contracts';
+import { useColumns } from '../../columns';
+import { PRIORITIES, PRIORITY_LABELS } from '@crm/contracts';
 import type { TaskFilters } from '../hooks';
 import type { User, Tag } from '@crm/contracts';
 
@@ -11,11 +12,12 @@ export function FilterChips({ filters, setFilter, reset, active, users, tags }: 
   users: User[];
   tags: Tag[];
 }) {
+  const { data: columns = [] } = useColumns();
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Select value={filters.status ?? ''} onChange={(e) => setFilter('status', e.target.value || undefined)} className="h-8 w-auto text-xs">
         <option value="">Все статусы</option>
-        {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
+        {columns.map((c) => <option key={c.key} value={c.key}>{c.name}</option>)}
       </Select>
       <Select value={filters.assignee_id ?? ''} onChange={(e) => setFilter('assignee_id', e.target.value || undefined)} className="h-8 w-auto max-w-40 text-xs">
         <option value="">Любой исполнитель</option>

@@ -2,14 +2,8 @@ import { z } from 'zod';
 import { userSchema } from './user.js';
 import { tagSchema } from './tag.js';
 
-export const STATUSES = ['new', 'in_progress', 'done'] as const;
-export type Status = (typeof STATUSES)[number];
-
-export const STATUS_LABELS: Record<Status, string> = {
-  new: 'Новая',
-  in_progress: 'В работе',
-  done: 'Завершена',
-};
+// Статус = ключ колонки из таблицы board_columns (динамический список)
+export type Status = string;
 
 export const PRIORITIES = ['low', 'medium', 'high'] as const;
 export type Priority = (typeof PRIORITIES)[number];
@@ -50,7 +44,7 @@ export const taskSchema = z.object({
   id: z.number(),
   title: z.string(),
   description: z.string(),
-  status: z.enum(STATUSES),
+  status: z.string(),
   priority: z.enum(PRIORITIES),
   start_date: dateStr.nullable(),
   due_date: dateStr.nullable(),
@@ -75,6 +69,7 @@ export type TaskMember = z.infer<typeof taskMemberSchema>;
 
 // Задача с подгруженными связями — формат списка и карточки
 export const taskViewSchema = taskSchema.extend({
+  done: z.boolean().optional(), // статус из завершающей колонки
   assignee: userSchema.nullable().optional(),
   creator: userSchema.optional(),
   tags: z.array(tagSchema).default([]),
@@ -117,11 +112,11 @@ const stripDefaults = (shape: Record<string, z.ZodType>) =>
 export const updateTaskSchema = z.object(stripDefaults(createTaskSchema.shape)).partial();
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
 
-export const updateStatusSchema = z.object({ status: z.enum(STATUSES) });
+export const updateStatusSchema = z.object({ status: z.string().min(1).max(80) });
 
 export const bulkActionSchema = z.object({
   ids: z.array(z.number().int().positive()).min(1).max(200),
   action: z.enum(['status', 'assign', 'delete']),
-  value: z.union([z.enum(STATUSES), z.number().int().positive()]).optional(),
+  value: z.union([z.string().max(80), z.number().int().positive()]).optional(),
 });
 export type BulkActionInput = z.infer<typeof bulkActionSchema>;

@@ -4,7 +4,8 @@ import fs from 'node:fs/promises';
 import { upload } from '../../core/uploads.js';
 import { asyncH, httpError } from '../../core/errors.js';
 import { listTasks, createTask } from '../tasks/service.js';
-import { STATUSES, PRIORITIES } from '@crm/contracts/task';
+import { PRIORITIES } from '@crm/contracts/task';
+import { columnByKey, firstColumnKey } from '../columns/index.js';
 import { q } from '../../core/db.js';
 
 export const transferRouter = Router();
@@ -38,7 +39,7 @@ transferRouter.post('/api/tasks/import', upload.single('file'), asyncH(async (re
     try {
       const title = String(row.title ?? '').trim();
       if (!title) throw new Error('нет title');
-      const status = STATUSES.includes(row.status) ? row.status : 'new';
+      const status = columnByKey(row.status) ? row.status : firstColumnKey();
       const priority = PRIORITIES.includes(row.priority) ? row.priority : 'medium';
       const due = /^\d{4}-\d{2}-\d{2}$/.test(row.due_date ?? '') ? row.due_date : null;
       const assignee = row.assignee_email ? userByEmail.get(row.assignee_email.trim()) ?? null : null;
@@ -48,7 +49,7 @@ transferRouter.post('/api/tasks/import', upload.single('file'), asyncH(async (re
         priority, due_date: due, assignee_id: assignee,
         participant_ids: [], observer_ids: [], tag_ids: tagIds, time_estimate: 0,
       });
-      if (status !== 'new') {
+      if (status !== firstColumnKey()) {
         q.run('UPDATE tasks SET status = ? WHERE id = ?', status, task.id);
       }
       created++;

@@ -1,3 +1,4 @@
+import { firstColumnKey } from '../modules/columns/index.js';
 import { q, tx, now } from './db.js';
 
 // Повторяющиеся задачи: когда next_run <= сегодня — создаём копию и сдвигаем дату.
@@ -22,7 +23,7 @@ function spawnRecurring() {
         `INSERT INTO tasks (title, description, status, priority, start_date, due_date,
            assignee_id, creator_id, sprint_id, time_estimate)
          VALUES (?,?,?,?,?,?,?,?,?,?)`,
-        t.title, t.description, 'new', t.priority, null, rec.next_run,
+        t.title, t.description, firstColumnKey(), t.priority, null, rec.next_run,
         t.assignee_id, t.creator_id, t.sprint_id, t.time_estimate,
       );
       const newId = Number(lastInsertRowid);

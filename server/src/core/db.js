@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
   title         TEXT NOT NULL,
   description   TEXT NOT NULL DEFAULT '',
-  status        TEXT NOT NULL DEFAULT 'new' CHECK (status IN ('new','in_progress','done')),
+  status        TEXT NOT NULL DEFAULT 'new',
   priority      TEXT NOT NULL DEFAULT 'medium' CHECK (priority IN ('low','medium','high')),
   start_date    TEXT,
   due_date      TEXT,
@@ -111,6 +111,15 @@ CREATE TABLE IF NOT EXISTS time_entries (
   comment    TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+CREATE TABLE IF NOT EXISTS board_columns (
+  id       INTEGER PRIMARY KEY AUTOINCREMENT,
+  key      TEXT NOT NULL UNIQUE,
+  name     TEXT NOT NULL,
+  color    TEXT NOT NULL DEFAULT '#5e6ad2',
+  position INTEGER NOT NULL DEFAULT 0,
+  is_done  INTEGER NOT NULL DEFAULT 0,
+  hidden   INTEGER NOT NULL DEFAULT 0
+);
 CREATE TABLE IF NOT EXISTS task_templates (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
   name        TEXT NOT NULL,
@@ -134,4 +143,50 @@ export function migrate() {
   db.exec(SCHEMA);
   const taskCols = db.prepare('PRAGMA table_info(tasks)').all().map((c) => c.name);
   if (!taskCols.includes('due_time')) db.exec('ALTER TABLE tasks ADD COLUMN due_time TEXT');
+
+  // Колонки доски по умолчанию
+  if (!db.prepare('SELECT COUNT(*) c FROM board_columns').get().c) {
+    const ins = db.prepare('INSERT INTO board_columns (key, name, color, position, is_done) VALUES (?,?,?,?,?)');
+    ins.run('new', 'Новая', '#26b5ce', 0, 0);
+    ins.run('in_progress', 'В работе', '#f2c94c', 1, 0);
+    ins.run('done', 'Завершена', '#4cb782', 2, 1);
+  }
+
+  // Статусы стали динамическими — убираем CHECK со tasks.status ребилдом
+  const tableSql = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='tasks'").get()?.sql ?? '';
+  if (/CHECK\s*\(\s*status\s+IN/i.test(tableSql)) {
+    db.pragma('foreign_keys = OFF');
+    db.transaction(() => {
+      const cols = db.prepare('PRAGMA table_info(tasks)').all().map((c) => c.name);
+      db.exec(`CREATE TABLE tasks_new (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        title         TEXT NOT NULL,
+        description   TEXT NOT NULL DEFAULT '',
+        status        TEXT NOT NULL DEFAULT 'new',
+        priority      TEXT NOT NULL DEFAULT 'medium' CHECK (priority IN ('low','medium','high')),
+        start_date    TEXT,
+        due_date      TEXT,
+        due_time      TEXT,
+        assignee_id   INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        creator_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        parent_id     INTEGER REFERENCES tasks(id) ON DELETE CASCADE,
+        sprint_id     INTEGER REFERENCES sprints(id) ON DELETE SET NULL,
+        time_estimate INTEGER NOT NULL DEFAULT 0,
+        recurrence    TEXT,
+        created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at    TEXT NOT NULL DEFAULT (datetime('now'))
+      )`);
+      const keep = ['id','title','description','status','priority','start_date','due_date','due_time','assignee_id','creator_id','parent_id','sprint_id','time_estimate','recurrence','created_at','updated_at']
+        .filter((c) => cols.includes(c));
+      db.exec(`INSERT INTO tasks_new (${keep.join(',')}) SELECT ${keep.join(',')} FROM tasks`);
+      db.exec('DROP TABLE tasks');
+      db.exec('ALTER TABLE tasks_new RENAME TO tasks');
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_tasks_status   ON tasks(status);
+               CREATE INDEX IF NOT EXISTS idx_tasks_assignee ON tasks(assignee_id);
+               CREATE INDEX IF NOT EXISTS idx_tasks_parent   ON tasks(parent_id);
+               CREATE INDEX IF NOT EXISTS idx_tasks_sprint   ON tasks(sprint_id);
+               CREATE INDEX IF NOT EXISTS idx_tasks_due      ON tasks(due_date)`);
+    })();
+    db.pragma('foreign_keys = ON');
+  }
 }

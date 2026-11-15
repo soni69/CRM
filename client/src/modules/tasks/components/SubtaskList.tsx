@@ -5,7 +5,6 @@ import { StatusBadge } from './badges';
 import { Avatar, Input, Button } from '../../../shared/ui';
 import { useCreateTask } from '../hooks';
 import { cn } from '../../../shared/utils/cn';
-import { STATUS_LABELS } from '@crm/contracts';
 
 export function SubtaskList({ parentId, onOpen }: { parentId: number; onOpen: (id: number) => void }) {
   const { data: subs = [] } = useQuery({
@@ -26,7 +25,7 @@ export function SubtaskList({ parentId, onOpen }: { parentId: number; onOpen: (i
       <div className="flex flex-col gap-1">
         {subs.map((s) => (
           <button key={s.id} onClick={() => onOpen(s.id)} className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-left hover:border-border-strong">
-            <span className={cn('flex-1 truncate text-sm', s.status === 'done' && 'text-faint line-through')}>{s.title}</span>
+            <span className={cn('flex-1 truncate text-sm', s.done && 'text-faint line-through')}>{s.title}</span>
             <StatusBadge status={s.status} />
             {s.assignee && <Avatar name={s.assignee.name} id={s.assignee.id} size={20} />}
           </button>

@@ -14,7 +14,7 @@ sprintsRouter.get('/api/sprints', asyncH(async (req, res) => {
     sprints: q.all(`
       SELECT s.*,
         (SELECT COUNT(*) FROM tasks t WHERE t.sprint_id = s.id AND ${vis.sql}) AS task_count,
-        (SELECT COUNT(*) FROM tasks t WHERE t.sprint_id = s.id AND t.status='done' AND ${vis.sql}) AS done_count
+        (SELECT COUNT(*) FROM tasks t WHERE t.sprint_id = s.id AND t.status IN (SELECT key FROM board_columns WHERE is_done = 1) AND ${vis.sql}) AS done_count
       FROM sprints s ORDER BY s.start_date DESC`, ...vis.params, ...vis.params),
   });
 }));

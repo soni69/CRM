@@ -2,6 +2,7 @@ export * from './user.js';
 export * from './auth.js';
 export * from './tag.js';
 export * from './task.js';
+export * from './column.js';
 export * from './roles.js';
 export * from './sprint.js';
 export * from './checklist.js';

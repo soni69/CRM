@@ -19,6 +19,7 @@ import { reportsRouter } from './modules/reports/index.js';
 import { transferRouter } from './modules/transfer/index.js';
 import { searchRouter } from './modules/search/index.js';
 import { usersRouter } from './modules/users/index.js';
+import { columnsRouter } from './modules/columns/index.js';
 
 export const app = express();
 app.set('trust proxy', 1);
@@ -33,7 +34,7 @@ app.use('/api', requireAuth);
 app.use([
   tasksRouter, checklistsRouter, commentsRouter, filesRouter, historyRouter,
   tagsRouter, sprintsRouter, timetrackingRouter, templatesRouter,
-  reportsRouter, transferRouter, searchRouter, usersRouter,
+  reportsRouter, transferRouter, searchRouter, usersRouter, columnsRouter,
 ]);
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));

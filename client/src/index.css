@@ -25,14 +25,14 @@
 
 :root {
   --bg: #ffffff;
-  --surface: #f7f8fa;
+  --surface: #f3f4f8;
   --raised: #ffffff;
-  --hover: #f0f1f5;
-  --border: #e5e6eb;
-  --border-strong: #d0d2da;
+  --hover: #eceef3;
+  --border: #d9dce4;
+  --border-strong: #c3c7d2;
   --text: #17181c;
-  --muted: #62666f;
-  --faint: #9aa0ab;
+  --muted: #5a5e6a;
+  --faint: #848a97;
   --accent: #5e6ad2;
   --accent-hover: #4f5bc7;
   --accent-soft: #eceefc;

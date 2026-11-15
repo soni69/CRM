@@ -1,12 +1,12 @@
 import { z } from 'zod';
-import { STATUSES, PRIORITIES } from '@crm/contracts/task';
+import { PRIORITIES } from '@crm/contracts/task';
 import { visibleTasksWhere } from '../roles/index.js';
 import { attachView } from '../tasks/index.js';
 import { q } from '../../core/db.js';
 
 export const searchParamsSchema = z.object({
   q: z.string().trim().max(200).optional(),
-  status: z.enum(STATUSES).optional(),
+  status: z.string().min(1).optional(),
   assignee_id: z.coerce.number().int().positive().optional(),
   priority: z.enum(PRIORITIES).optional(),
   tag_id: z.coerce.number().int().positive().optional(),
@@ -43,7 +43,7 @@ export function searchTasks(user, params) {
     args.push(params.tag_id);
   }
   if (params.overdue) {
-    conds.push("t.due_date IS NOT NULL AND t.due_date < date('now') AND t.status != 'done'");
+    conds.push("t.due_date IS NOT NULL AND t.due_date < date('now') AND t.status NOT IN (SELECT key FROM board_columns WHERE is_done = 1)");
   }
   if (params.due_before) { conds.push('t.due_date IS NOT NULL AND t.due_date <= ?'); args.push(params.due_before); }
   if (params.due_after) { conds.push('t.due_date IS NOT NULL AND t.due_date >= ?'); args.push(params.due_after); }

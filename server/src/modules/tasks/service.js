@@ -3,6 +3,7 @@ import {
   can, canSeeTask, canChangeStatus, canEditTask, canAssign, canDeleteTask, taskInvolvement,
 } from '../roles/index.js';
 import { recordEvent } from '../history/index.js';
+import { columnByKey } from '../columns/index.js';
 import {
   getTask, attachView, listTasks, memberKinds, createTaskRow, updateTaskRow,
   setTaskTags, setTaskMembers, deleteTaskRow, tx, q,
@@ -83,6 +84,7 @@ export function setStatus(user, id, status) {
   if (!canChangeStatus(user, task, memberKinds(task.id, user.id))) {
     throw httpError(403, 'Нет прав менять статус этой задачи');
   }
+  if (!columnByKey(status)) throw httpError(400, 'Неизвестный статус');
   tx(() => {
     updateTaskRow(id, { status });
     recordEvent(id, user.id, 'status', { from: task.status, to: status });

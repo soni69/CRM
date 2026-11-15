@@ -2,14 +2,14 @@ import { useQuery } from '@tanstack/react-query';
 import { historyApi } from '../api';
 import { Avatar } from '../../../shared/ui';
 import { formatDateTime } from '../../../shared/utils/format';
-import { STATUS_LABELS } from '@crm/contracts';
+import { useColumnByKey } from '../../columns';
 import type { TaskEvent } from '@crm/contracts';
 
-function describe(e: TaskEvent): string {
+function describe(e: TaskEvent, colName: (key: string) => string): string {
   const p = e.payload as Record<string, unknown>;
   switch (e.type) {
     case 'created': return 'создал(а) задачу';
-    case 'status': return `статус: ${STATUS_LABELS[p.from as keyof typeof STATUS_LABELS] ?? p.from} → ${STATUS_LABELS[p.to as keyof typeof STATUS_LABELS] ?? p.to}`;
+    case 'status': return `статус: ${colName(String(p.from))} → ${colName(String(p.to))}`;
     case 'field': return `изменил(а): ${(p.fields as string[])?.join(', ')}`;
     case 'assignee': return 'сменил(а) исполнителя';
     case 'member': return 'обновил(а) участников';
@@ -24,6 +24,8 @@ function describe(e: TaskEvent): string {
 }
 
 export function HistoryFeed({ taskId }: { taskId: number }) {
+  const colByKey = useColumnByKey();
+  const colName = (key: string) => colByKey(key)?.name ?? key;
   const { data: events = [] } = useQuery({
     queryKey: ['history', taskId],
     queryFn: () => historyApi.list(taskId).then((r) => r.events),
@@ -35,7 +37,7 @@ export function HistoryFeed({ taskId }: { taskId: number }) {
           <Avatar name={e.actor?.name ?? '?'} id={e.actor_id} size={20} />
           <div className="min-w-0">
             <span className="font-medium">{e.actor?.name}</span>{' '}
-            <span className="text-muted">{describe(e)}</span>
+            <span className="text-muted">{describe(e, colName)}</span>
             <span className="ml-1.5 text-[11px] text-faint">{formatDateTime(e.created_at)}</span>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { Button, Select } from '../../../shared/ui';
-import { STATUSES, STATUS_LABELS } from '@crm/contracts';
+import { useColumns } from '../../columns';
 import { AssigneeSelect } from '../../../modules/users';
 import { useBulk } from '../hooks';
 import { useState } from 'react';
@@ -9,6 +9,7 @@ import { ApiError } from '../../../shared/api/client';
 export function BulkBar({ selected, onDone }: { selected: Set<number>; onDone: () => void }) {
   const bulk = useBulk();
   const toast = useToast();
+  const { data: columns = [] } = useColumns();
   const [status, setStatus] = useState('');
   const [assignee, setAssignee] = useState<number | null>(null);
   if (!selected.size) return null;
@@ -28,7 +29,7 @@ export function BulkBar({ selected, onDone }: { selected: Set<number>; onDone: (
       <span className="text-sm font-medium">Выбрано: {selected.size}</span>
       <Select value={status} onChange={(e) => { if (e.target.value) run('status', e.target.value); setStatus(''); }} className="h-8 w-auto text-xs">
         <option value="">Статус…</option>
-        {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
+        {columns.map((c) => <option key={c.key} value={c.key}>{c.name}</option>)}
       </Select>
       <div className="w-36">
         <AssigneeSelect value={assignee} onChange={(v) => { if (v) run('assign', v); setAssignee(null); }} />

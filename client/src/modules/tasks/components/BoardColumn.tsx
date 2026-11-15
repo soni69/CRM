@@ -1,39 +1,42 @@
 import { useState } from 'react';
-import type { TaskView, Status } from '@crm/contracts';
+import type { TaskView, BoardColumn as BoardColumnT } from '@crm/contracts';
 import { TaskCard } from './TaskCard';
-import { Button, Input } from '../../../shared/ui';
+import { Input } from '../../../shared/ui';
 import { useCreateTask } from '../hooks';
 import { tasksApi } from '../api';
+import { useColumns } from '../../columns';
 import { cn } from '../../../shared/utils/cn';
 
-const COL_COLOR: Record<Status, string> = {
-  new: 'border-t-[#26b5ce]',
-  in_progress: 'border-t-warning',
-  done: 'border-t-success',
-};
-
-export function BoardColumn({ status, title, tasks, onOpen, selected, onSelect }: {
-  status: Status; title: string; tasks: TaskView[];
+export function BoardColumn({ column, tasks, onOpen, selected, onSelect }: {
+  column: BoardColumnT; tasks: TaskView[];
   onOpen: (id: number) => void; selected: Set<number>; onSelect: (id: number) => void;
 }) {
   const create = useCreateTask();
+  const { data: columns = [] } = useColumns();
   const [quick, setQuick] = useState('');
+  const firstKey = columns[0]?.key;
   const add = () => {
     const t = quick.trim();
     if (!t) return;
     create.mutate({ title: t, description: '', priority: 'medium', time_estimate: 0, participant_ids: [], observer_ids: [], tag_ids: [] }, {
       onSuccess: (d) => {
         // быстрая задача сразу в нужную колонку
-        if (status !== 'new') tasksApi.setStatus(d.task.id, status);
+        if (column.key !== firstKey) tasksApi.setStatus(d.task.id, column.key);
       },
     });
     setQuick('');
   };
 
   return (
-    <section className={cn('flex min-h-40 min-w-60 flex-1 basis-0 flex-col rounded-xl border border-border border-t-2 bg-surface', COL_COLOR[status])}>
+    <section
+      className="flex min-h-40 min-w-60 flex-1 basis-0 flex-col rounded-xl border border-border border-t-2 bg-surface"
+      style={{ borderTopColor: column.color }}
+    >
       <header className="flex items-center justify-between px-3 py-2.5">
-        <h3 className="text-sm font-semibold">{title}</h3>
+        <h3 className="text-sm font-semibold">
+          <span className="mr-1.5 inline-block h-2 w-2 rounded-full align-middle" style={{ backgroundColor: column.color }} />
+          {column.name}
+        </h3>
         <span className="text-xs text-faint">{tasks.length}</span>
       </header>
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto px-2.5 pb-2">

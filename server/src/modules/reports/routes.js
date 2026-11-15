@@ -25,13 +25,13 @@ reportsRouter.get('/api/reports/overview', asyncH(async (req, res) => {
   const overdue = q.all(`
     SELECT t.id AS task_id, t.title, t.due_date, u.name AS assignee_name
     FROM tasks t LEFT JOIN users u ON u.id = t.assignee_id
-    WHERE ${vis.sql} AND ${mineSql} AND t.due_date IS NOT NULL AND t.due_date < date('now') AND t.status != 'done'
+    WHERE ${vis.sql} AND ${mineSql} AND t.due_date IS NOT NULL AND t.due_date < date('now') AND t.status NOT IN (SELECT key FROM board_columns WHERE is_done = 1)
     ORDER BY t.due_date`, ...vis.params, ...mineArgs);
 
   const doneByUser = q.all(`
     SELECT u.id AS user_id, u.name, COUNT(t.id) AS done_count
     FROM tasks t JOIN users u ON u.id = COALESCE(t.assignee_id, t.creator_id)
-    WHERE ${vis.sql} AND ${teamWide ? '1=1' : 'u.id = ?'} AND t.status = 'done'
+    WHERE ${vis.sql} AND ${teamWide ? '1=1' : 'u.id = ?'} AND t.status IN (SELECT key FROM board_columns WHERE is_done = 1)
       AND t.updated_at BETWEEN ? AND ?
     GROUP BY u.id ORDER BY done_count DESC`, ...vis.params, ...(teamWide ? [] : [req.user.id]), from, to + 'T23:59:59');
 
@@ -44,8 +44,8 @@ reportsRouter.get('/api/reports/overview', asyncH(async (req, res) => {
 
   const totals = q.get(`
     SELECT COUNT(*) AS total,
-      SUM(status = 'done') AS done, SUM(status = 'in_progress') AS in_progress,
-      SUM(due_date IS NOT NULL AND due_date < date('now') AND status != 'done') AS overdue
+      SUM(status IN (SELECT key FROM board_columns WHERE is_done = 1)) AS done,
+      SUM(due_date IS NOT NULL AND due_date < date('now') AND status NOT IN (SELECT key FROM board_columns WHERE is_done = 1)) AS overdue
     FROM tasks t WHERE ${vis.sql} AND ${mineSql}`, ...vis.params, ...mineArgs);
 
   res.json({ overdue, done_by_user: doneByUser, time_by_user: timeByUser, totals });

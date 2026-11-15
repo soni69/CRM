@@ -18,7 +18,7 @@ export function TaskCard({ task, onOpen, selected, onSelect }: {
   task: TaskView; onOpen: (id: number) => void; selected: boolean; onSelect: (id: number) => void;
 }) {
   const { user } = useAuth();
-  const overdue = isOverdue(task.due_date, task.status, task.due_time);
+  const overdue = isOverdue(task.due_date, !!task.done, task.due_time);
   const c = task.counts;
   const canSelect = user && (user.role !== 'member' || task.creator_id === user.id || task.assignee_id === user.id);
 
@@ -42,7 +42,7 @@ export function TaskCard({ task, onOpen, selected, onSelect }: {
       <div className="flex items-start gap-2">
         <PriorityIcon priority={task.priority} className="mt-1" />
         <div className="min-w-0 flex-1">
-          <p className={cn('font-medium leading-snug', task.status === 'done' && 'text-muted line-through')}>{task.title}</p>
+          <p className={cn('font-medium leading-snug', task.done && 'text-muted line-through')}>{task.title}</p>
           {task.tags.length > 0 && (
             <div className="mt-1.5 flex flex-wrap gap-1">
               {task.tags.map((t) => (

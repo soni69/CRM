@@ -1,14 +1,21 @@
-import { Badge } from '../../../shared/ui';
-import { STATUS_LABELS, PRIORITY_LABELS, type Status, type Priority } from '@crm/contracts';
+import { PRIORITY_LABELS, type Priority } from '@crm/contracts';
 import { cn } from '../../../shared/utils/cn';
+import { useColumnByKey } from '../../columns';
 
-const STATUS_TONE: Record<Status, 'blue' | 'amber' | 'green'> = {
-  new: 'blue', in_progress: 'amber', done: 'green',
-};
-
-export const StatusBadge = ({ status }: { status: Status }) => (
-  <Badge tone={STATUS_TONE[status]}>{STATUS_LABELS[status]}</Badge>
-);
+// Цветной бейдж статуса — цвет и подпись берутся из настраиваемой колонки
+export function StatusBadge({ status }: { status: string }) {
+  const column = useColumnByKey()(status);
+  const color = column?.color ?? '#8d94a8';
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium leading-4"
+      style={{ backgroundColor: `${color}26`, color }}
+    >
+      <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: color }} />
+      {column?.name ?? status}
+    </span>
+  );
+}
 
 export function PriorityIcon({ priority, className }: { priority: Priority; className?: string }) {
   const map = {

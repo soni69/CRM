@@ -16,8 +16,8 @@ export function formatMinutes(min: number): string {
   return m ? `${h}ч ${m}м` : `${h}ч`;
 }
 
-export function isOverdue(due: string | null, status: string, time?: string | null): boolean {
-  if (!due || status === 'done') return false;
+export function isOverdue(due: string | null, done: boolean, time?: string | null): boolean {
+  if (!due || done) return false;
   const today = new Date().toISOString().slice(0, 10);
   if (due !== today) return due < today;
   return !!time && time < new Date().toTimeString().slice(0, 5);

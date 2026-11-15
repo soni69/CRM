@@ -1,5 +1,6 @@
 import { q, tx, now } from '../../core/db.js';
 import { visibleTasksWhere } from '../roles/index.js';
+import { firstColumnKey, doneKeys } from '../columns/index.js';
 
 export const memberKinds = (taskId, userId) =>
   q.all('SELECT kind FROM task_members WHERE task_id = ? AND user_id = ?', taskId, userId).map((r) => r.kind);
@@ -50,8 +51,10 @@ export function attachView(tasks) {
   const memByTask = groupBy(memRows, 'task_id');
   const countsByTask = new Map(countRows.map((r) => [r.id, r]));
 
+  const done = new Set(doneKeys());
   return tasks.map((t) => ({
     ...parseRec(t),
+    done: done.has(t.status),
     assignee: t.assignee_id ? (users[t.assignee_id] ?? null) : null,
     creator: users[t.creator_id],
     tags: (tagsByTask.get(t.id) ?? []).map(({ id, name, color }) => ({ id, name, color })),
@@ -77,7 +80,7 @@ export function createTaskRow(data, creatorId) {
     `INSERT INTO tasks (title, description, status, priority, start_date, due_date, due_time,
        assignee_id, creator_id, parent_id, sprint_id, time_estimate)
      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
-    data.title, data.description ?? '', 'new', data.priority ?? 'medium',
+    data.title, data.description ?? '', firstColumnKey(), data.priority ?? 'medium',
     data.start_date ?? null, data.due_date ?? null, data.due_time ?? null,
     data.assignee_id ?? null, creatorId, data.parent_id ?? null,
     data.sprint_id ?? null, data.time_estimate ?? 0,

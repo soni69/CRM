@@ -1,7 +1,8 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { sprintsApi } from '../api';
-import { STATUSES, STATUS_LABELS, SPRINT_STATUS_LABELS } from '@crm/contracts';
+import { SPRINT_STATUS_LABELS } from '@crm/contracts';
+import { useColumns } from '../../columns';
 import { PageSpinner, Badge, EmptyState } from '../../../shared/ui';
 import { BoardColumn } from '../../tasks/components/BoardColumn';
 import { useSelection } from '../../tasks/hooks';
@@ -19,12 +20,16 @@ export function SprintBoardPage() {
   });
   const nav = useNavigate();
   const sel = useSelection();
+  const { data: columns = [] } = useColumns();
 
   const byStatus = useMemo(() => {
-    const m = new Map(STATUSES.map((s) => [s, [] as NonNullable<typeof data>['tasks']]));
-    for (const t of data?.tasks ?? []) m.get(t.status)?.push(t);
-    return m;
-  }, [data]);
+    const visible = columns.filter((c) => !c.hidden);
+    const m = new Map(visible.map((c) => [c.key, [] as NonNullable<typeof data>['tasks']]));
+    const rest: NonNullable<typeof data>['tasks'] = [];
+    for (const t of data?.tasks ?? []) (m.get(t.status) ?? rest).push(t);
+    if (rest.length) m.set('__other__', rest);
+    return { map: m, visible };
+  }, [data, columns]);
 
   if (isLoading || !data) return <PageSpinner />;
   const { sprint, tasks } = data;
@@ -42,8 +47,8 @@ export function SprintBoardPage() {
           <EmptyState title="В спринте нет задач" hint="Назначьте задачам этот спринт в карточке задачи" />
         ) : (
           <div className="flex h-full gap-3 overflow-x-auto p-4">
-            {STATUSES.map((s) => (
-              <BoardColumn key={s} status={s} title={STATUS_LABELS[s]} tasks={byStatus.get(s) ?? []} onOpen={(id) => nav(`/tasks/${id}`)} selected={sel.selected} onSelect={sel.toggle} />
+            {byStatus.visible.map((c) => (
+              <BoardColumn key={c.key} column={c} tasks={byStatus.map.get(c.key) ?? []} onOpen={(id) => nav(`/tasks/${id}`)} selected={sel.selected} onSelect={sel.toggle} />
             ))}
           </div>
         )}

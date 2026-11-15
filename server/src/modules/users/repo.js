@@ -3,7 +3,7 @@ import { q } from '../../core/db.js';
 export const listUsers = () =>
   q.all(`
     SELECT u.id, u.name, u.email, u.role, u.created_at,
-      (SELECT COUNT(*) FROM tasks t WHERE t.assignee_id = u.id AND t.status != 'done') AS open_tasks
+      (SELECT COUNT(*) FROM tasks t WHERE t.assignee_id = u.id AND t.status NOT IN (SELECT key FROM board_columns WHERE is_done = 1)) AS open_tasks
     FROM users u ORDER BY u.name
   `);
 

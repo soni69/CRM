@@ -3,13 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useTasks } from '../../tasks/hooks';
 import { useUsers } from '../../users';
 import { PageSpinner, EmptyState, Avatar, Input, Select } from '../../../shared/ui';
-import { STATUSES, STATUS_LABELS } from '@crm/contracts';
+import { useColumns, useColumnByKey } from '../../columns';
 import { cn } from '../../../shared/utils/cn';
 
 const ROW = 34;            // высота строки
 const LABEL_W = 220;       // ширина колонки с названием
 const HOUR_PX = 30, DAY_PX = 26;
-const BAR_COLORS = { new: '#26b5ce', in_progress: '#f2c94c', done: '#4cb782' } as const;
 
 const RANGES = [
   { id: '12h', label: '12 часов', ms: 12 * 36e5 },
@@ -28,6 +27,8 @@ const dayMs = (d: string) => Date.parse(d + 'T00:00:00Z');
 export function GanttPage() {
   const { data: tasks = [], isLoading } = useTasks();
   const { data: users = [] } = useUsers();
+  const { data: columns = [] } = useColumns();
+  const colByKey = useColumnByKey();
   const nav = useNavigate();
   const [q, setQ] = useState('');
   const [assignee, setAssignee] = useState('');
@@ -89,7 +90,7 @@ export function GanttPage() {
         </Select>
         <Select value={status} onChange={(e) => setStatus(e.target.value)} className="h-8 w-auto text-xs">
           <option value="">Все статусы</option>
-          {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
+          {columns.map((c) => <option key={c.key} value={c.key}>{c.name}</option>)}
         </Select>
         <div className="ml-auto flex items-center gap-1 rounded-lg border border-border p-0.5">
           {RANGES.map((r) => (
@@ -136,15 +137,15 @@ export function GanttPage() {
                       className="sticky left-0 z-10 flex shrink-0 items-center gap-2 border-r border-border bg-raised px-3 text-left hover:bg-hover"
                       style={{ width: LABEL_W }}
                     >
-                      <span className={cn('min-w-0 flex-1 truncate text-xs', task.status === 'done' && 'text-faint line-through')}>{task.title}</span>
+                      <span className={cn('min-w-0 flex-1 truncate text-xs', task.done && 'text-faint line-through')}>{task.title}</span>
                       {task.assignee && <Avatar name={task.assignee.name} id={task.assignee.id} size={16} />}
                     </button>
                     <div className="relative flex-1" style={{ width: W }}>
                       <div
                         onClick={() => nav(`/tasks/${task.id}`)}
-                        title={`${task.title} · ${STATUS_LABELS[task.status]} · ${from} → ${to}`}
+                        title={`${task.title} · ${colByKey(task.status)?.name ?? task.status} · ${from} → ${to}`}
                         className="absolute top-[7px] h-5 cursor-pointer rounded-md opacity-90 transition-opacity hover:opacity-100"
-                        style={{ left, width: Math.max(PX * 0.6, right - left), background: BAR_COLORS[task.status] }}
+                        style={{ left, width: Math.max(PX * 0.6, right - left), background: colByKey(task.status)?.color ?? '#8d94a8' }}
                       />
                     </div>
                   </div>

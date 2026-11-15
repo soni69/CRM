@@ -1,7 +1,6 @@
 // Пути эндпоинтов — единственное место, где они перечислены.
 export const API = {
   auth: {
-    register: '/api/auth/register',
     login: '/api/auth/login',
     logout: '/api/auth/logout',
     me: '/api/auth/me',
@@ -34,5 +33,5 @@ export const API = {
   },
   reports: { overview: '/api/reports/overview' },
   search: { tasks: '/api/search/tasks' },
-  users: { list: '/api/users', role: (id: number) => `/api/users/${id}/role`, one: (id: number) => `/api/users/${id}` },
+  users: { list: '/api/users', create: '/api/users', role: (id: number) => `/api/users/${id}/role`, one: (id: number) => `/api/users/${id}` },
 } as const;

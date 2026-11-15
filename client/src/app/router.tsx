@@ -1,6 +1,6 @@
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import { PageSpinner } from '../shared/ui';
-import { useAuth, LoginPage, RegisterPage } from '../modules/auth';
+import { useAuth, LoginPage } from '../modules/auth';
 import { BoardPage } from '../modules/tasks';
 import { GanttPage } from '../modules/gantt';
 import { SprintsPage, SprintBoardPage } from '../modules/sprints';
@@ -27,7 +27,6 @@ export const router = createBrowserRouter([
     element: <GuestOnly />,
     children: [
       { path: '/login', element: <LoginPage /> },
-      { path: '/register', element: <RegisterPage /> },
     ],
   },
   {

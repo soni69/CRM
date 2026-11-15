@@ -20,7 +20,7 @@ Kanban-доска со статусами, поиск и фильтрация. �
 - Статусы: «Новая», «В работе», «Завершена» + смена статуса
 - Поиск и фильтрация задач
 - Данные сохраняются после перезагрузки страницы
-- Авторизация пользователя (вход + регистрация)
+- Авторизация пользователя (только вход; учётки создаёт админ)
 
 ### Дополнительно (роли — по вашему уточнению)
 - Три роли: **admin**, **manager**, **member**
@@ -85,7 +85,7 @@ CRM/
 │
 ├── shared/                       # КОНТРАКТЫ — единственное, что импортируют все
 │   └── contracts/
-│       ├── auth.ts               # схемы login/register, тип Session
+│       ├── auth.ts               # схемы login + createUser (админ), тип Session
 │       ├── task.ts               # тип Task, статусы, приоритеты, zod-схемы
 │       ├── user.ts               # тип User, роли
 │       └── api.ts                # имена эндпоинтов
@@ -102,7 +102,7 @@ CRM/
 │       │   ├── scheduler.js      # таймер: создаёт задачи по расписанию (recurring)
 │       │   └── seed.js           # демо-пользователи и задачи при первом старте
 │       └── modules/              # ← КАЖДЫЙ МОДУЛЬ В СВОЕЙ ПАПКЕ
-│           ├── auth/             # ВХОД: register, login, logout, GET /me
+│           ├── auth/             # ВХОД: login, logout, GET /me (регистрации нет)
 │           │   ├── index.js      # публичный экспорт: router + requireAuth
 │           │   ├── routes.js
 │           │   ├── service.js    # хэширование, сессии
@@ -154,10 +154,10 @@ CRM/
         │   └── utils/            # formatDate, cn()
         └── modules/              # ← КАЖДЫЙ МОДУЛЬ В СВОЕЙ ПАПКЕ
             ├── auth/             # ВХОД (третья папка)
-            │   ├── index.ts      # публично: useAuth(), LoginPage, RegisterPage
-            │   ├── api.ts        # login/logout/register/me запросы
-            │   ├── hooks.ts      # useAuth — сессия, useLogin, useRegister
-            │   └── pages/        # LoginPage.tsx, RegisterPage.tsx
+            │   ├── index.ts      # публично: useAuth(), LoginPage
+            │   ├── api.ts        # login/logout/me запросы
+            │   ├── hooks.ts      # useAuth — сессия, useLogin
+            │   └── pages/        # LoginPage.tsx, AuthLayout.tsx
             ├── roles/            # ПРАВА НА КЛИЕНТЕ
             │   ├── index.ts      # публично: useCan(), RoleGuard
             │   ├── permissions.ts# зеркало матрицы прав для UI (скрыть кнопки)
@@ -341,7 +341,7 @@ task_templates(
 
 | Действие | member | manager | admin |
 |---|:---:|:---:|:---:|
-| Вход / регистрация / выход | ✓ | ✓ | ✓ |
+| Вход / выход | ✓ | ✓ | ✓ |
 | Просмотр доски и списка задач | только свои¹ | все | все |
 | Поиск и фильтрация | внутри своих¹ | по всем | по всем |
 | Создать задачу | ✓ | ✓ | ✓ |
@@ -373,7 +373,7 @@ task_templates(
 
 ```
 # auth
-POST   /api/auth/register        { name, email, password }
+POST   /api/users                 { name, email, password, role } — только админ
 POST   /api/auth/login           { email, password }
 POST   /api/auth/logout
 GET    /api/auth/me              → текущий пользователь + роль
@@ -454,7 +454,7 @@ DELETE /api/users/:id                         — только admin
 
 | Маршрут | Модуль | Что на странице |
 |---|---|---|
-| `/login`, `/register` | auth | форма, валидация, ссылка друг на друга |
+| `/login` | auth | форма входа, валидация |
 | `/` | tasks + search | Kanban-доска (3 колонки), поиск и фильтры сверху, переключатель вида: Доска / Список / Гант |
 | `/` (мобильный) | tasks | колонки превращаются в табы «Новые / В работе / Готово» |
 | `/gantt` | gantt | таймлайн задач по датам (SVG), drag для сдвига — v2, сначала read-only |
@@ -509,7 +509,7 @@ DELETE /api/users/:id                         — только admin
 1. Скелет: workspaces, Vite, Tailwind, `shared/contracts`,
    дизайн-токены + ui-kit в `shared/ui` (Linear-style, светлая+тёмная темы)
 2. Server core: db.js (схема + миграции), config, errors, seed
-3. Модуль auth (сервер + клиент: login/register/me, защита роутов)
+3. Модуль auth (сервер + клиент: login/me, защита роутов)
 4. Модуль roles (матрица + requirePermission + useCan/RoleGuard)
 5. Модуль tasks — база: CRUD + доска + модалка + смена статуса
 6. Модуль search (эндпоинт + SearchBar + фильтры через URL-параметры)

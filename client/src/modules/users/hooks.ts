@@ -13,6 +13,10 @@ export function useUserMutations() {
   const inv = () => qc.invalidateQueries({ queryKey: ['users'] });
   const onErr = (e: unknown) => toast(e instanceof ApiError ? e.message : 'Ошибка', 'err');
   return {
+    create: useMutation({
+      mutationFn: (d: Parameters<typeof usersApi.create>[0]) => usersApi.create(d),
+      onSuccess: () => { toast('Пользователь создан'); inv(); }, onError: onErr,
+    }),
     setRole: useMutation({
       mutationFn: (v: { id: number; role: Parameters<typeof usersApi.setRole>[1] }) => usersApi.setRole(v.id, v.role),
       onSuccess: () => { toast('Роль обновлена'); inv(); }, onError: onErr,

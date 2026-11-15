@@ -1,21 +1,11 @@
 import { Router } from 'express';
-import { registerSchema, loginSchema } from '@crm/contracts/auth';
+import { loginSchema } from '@crm/contracts/auth';
 import { API as API_PATHS } from '@crm/contracts/api';
 import { asyncH, parseBody, httpError } from '../../core/errors.js';
-import { createSession, destroySession, findUserByEmail, createUser, checkPassword, requireAuth } from './service.js';
+import { createSession, destroySession, findUserByEmail, checkPassword, requireAuth } from './service.js';
 
 export const authRouter = Router();
 const p = API_PATHS.auth;
-
-authRouter.post(p.register, asyncH(async (req, res) => {
-  const data = parseBody(registerSchema, req.body);
-  if (findUserByEmail(data.email)) {
-    throw httpError(409, 'Пользователь с таким email уже существует');
-  }
-  const user = createUser(data);
-  createSession(res, user.id);
-  res.status(201).json({ user });
-}));
 
 authRouter.post(p.login, asyncH(async (req, res) => {
   const data = parseBody(loginSchema, req.body);

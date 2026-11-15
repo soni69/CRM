@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { authApi } from '../api';
 import { Button, Field, Input } from '../../../shared/ui';
@@ -25,7 +25,6 @@ export function LoginPage() {
     <AuthLayout
       title="С возвращением"
       subtitle="Войдите, чтобы продолжить работу с задачами"
-      footer={<>Нет аккаунта? <Link to="/register" className="text-accent hover:underline">Регистрация</Link></>}
     >
       <form onSubmit={submit} className="flex flex-col gap-3.5">
         <Field label="Email"><Input type="email" required autoFocus value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.ru" /></Field>

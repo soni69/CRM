@@ -1,7 +1,7 @@
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import { PageSpinner } from '../shared/ui';
 import { useAuth, LoginPage } from '../modules/auth';
-import { BoardPage } from '../modules/tasks';
+import { BoardPage, TaskPage, NewTaskPage } from '../modules/tasks';
 import { GanttPage } from '../modules/gantt';
 import { SprintsPage, SprintBoardPage } from '../modules/sprints';
 import { ReportsPage } from '../modules/reports';
@@ -36,6 +36,8 @@ export const router = createBrowserRouter([
         element: <Layout />,
         children: [
           { path: '/', element: <BoardPage /> },
+          { path: '/tasks/new', element: <NewTaskPage /> },
+          { path: '/tasks/:id', element: <TaskPage /> },
           { path: '/gantt', element: <GanttPage /> },
           { path: '/sprints', element: <SprintsPage /> },
           { path: '/sprints/:id', element: <SprintBoardPage /> },

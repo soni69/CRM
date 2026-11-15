@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
-  Modal, ModalHeader, Tabs, Button, Field, Input, Textarea, Select,
-  ConfirmDialog, Dropdown, DropdownItem, useToast,
+  Tabs, Button, Field, Input, Textarea, Select,
+  ConfirmDialog, Dropdown, DropdownItem, useToast, PageSpinner,
 } from '../../../shared/ui';
 import {
   PRIORITIES, PRIORITY_LABELS, RECURRENCE_FREQS, RECURRENCE_LABELS,
@@ -20,8 +21,8 @@ import { FileList } from '../../../modules/files';
 import { HistoryFeed } from '../../../modules/history';
 import { TimeSection } from '../../../modules/timetracking';
 import { useTemplates, useTemplateMutations, templatesApi } from '../../../modules/templates';
-import { StatusMenu } from './StatusMenu';
-import { SubtaskList } from './SubtaskList';
+import { StatusMenu } from '../components/StatusMenu';
+import { SubtaskList } from '../components/SubtaskList';
 import { useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '../../../shared/api/client';
 
@@ -35,21 +36,19 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'history', label: 'История' },
 ];
 
-export function TaskModal({ taskId, open, onClose, onOpenTask }: {
-  taskId: number | null; open: boolean; onClose: () => void; onOpenTask: (id: number) => void;
-}) {
+function BackLink() {
+  const nav = useNavigate();
   return (
-    <Modal open={open} onClose={onClose} className="max-w-2xl">
-      {taskId === null
-        ? <CreateForm onClose={onClose} onOpenTask={onOpenTask} />
-        : <EditForm taskId={taskId} onClose={onClose} onOpenTask={onOpenTask} />}
-    </Modal>
+    <button onClick={() => nav(-1)} className="flex items-center gap-1 text-sm text-muted hover:text-text">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L5 7l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      Назад
+    </button>
   );
 }
 
-// ---------- Создание ----------
-function CreateForm({ onClose, onOpenTask }: { onClose: () => void; onOpenTask: (id: number) => void }) {
-  const qc = useQueryClient();
+// ---------- Страница создания ----------
+export function NewTaskPage() {
+  const nav = useNavigate();
   const toast = useToast();
   const create = useCreateTask();
   const { data: templates = [] } = useTemplates();
@@ -60,7 +59,7 @@ function CreateForm({ onClose, onOpenTask }: { onClose: () => void; onOpenTask: 
     if (!f.title.trim() && !f.template_id) return;
     if (f.template_id) {
       tmut.createTask.mutate({ id: Number(f.template_id), title: f.title.trim() || undefined }, {
-        onSuccess: (d) => { onClose(); onOpenTask(d.task.id); },
+        onSuccess: (d) => nav(`/tasks/${d.task.id}`, { replace: true }),
       });
       return;
     }
@@ -69,15 +68,16 @@ function CreateForm({ onClose, onOpenTask }: { onClose: () => void; onOpenTask: 
       assignee_id: f.assignee_id, due_date: f.due_date || null, sprint_id: f.sprint_id,
       tag_ids: f.tag_ids, time_estimate: 0, participant_ids: [], observer_ids: [],
     }, {
-      onSuccess: (d) => { onClose(); onOpenTask(d.task.id); },
+      onSuccess: (d) => nav(`/tasks/${d.task.id}`, { replace: true }),
       onError: (e) => toast(e instanceof ApiError ? e.message : 'Ошибка', 'err'),
     });
   };
 
   return (
-    <>
-      <ModalHeader title="Новая задача" onClose={onClose} />
-      <div className="flex flex-col gap-3.5 p-5">
+    <div className="mx-auto max-w-2xl p-4 sm:p-6">
+      <div className="mb-4"><BackLink /></div>
+      <h1 className="mb-4 text-lg font-semibold">Новая задача</h1>
+      <div className="flex flex-col gap-3.5 rounded-xl border border-border bg-raised p-5">
         {templates.length > 0 && (
           <Field label="Из шаблона (необязательно)">
             <Select value={f.template_id} onChange={(e) => setF({ ...f, template_id: e.target.value })}>
@@ -107,17 +107,20 @@ function CreateForm({ onClose, onOpenTask }: { onClose: () => void; onOpenTask: 
           {create.isPending || tmut.createTask.isPending ? 'Создание…' : 'Создать задачу'}
         </Button>
       </div>
-    </>
+    </div>
   );
 }
 
-// ---------- Редактирование ----------
-function EditForm({ taskId, onClose, onOpenTask }: { taskId: number; onClose: () => void; onOpenTask: (id: number) => void }) {
+// ---------- Страница задачи ----------
+export function TaskPage() {
+  const { id } = useParams();
+  const taskId = Number(id);
+  const nav = useNavigate();
   const { user } = useAuth();
   const can = useCan();
   const qc = useQueryClient();
   const toast = useToast();
-  const { data: task } = useTask(taskId);
+  const { data: task, isLoading } = useTask(taskId);
   const update = useUpdateTask(taskId);
   const del = useDeleteTask();
   const [tab, setTab] = useState<Tab>('comments');
@@ -129,7 +132,15 @@ function EditForm({ taskId, onClose, onOpenTask }: { taskId: number; onClose: ()
     if (task) { setTitle(task.title); setDesc(task.description); }
   }, [task?.id]); // eslint-disable-line
 
-  if (!task) return <div className="p-10 text-center text-muted">Загрузка…</div>;
+  if (isLoading) return <PageSpinner />;
+  if (!task) {
+    return (
+      <div className="mx-auto max-w-2xl p-4 sm:p-6">
+        <div className="mb-4"><BackLink /></div>
+        <p className="py-16 text-center text-muted">Задача не найдена или нет доступа</p>
+      </div>
+    );
+  }
 
   const editable = can('task.update.any') || (can('task.update.own') && task.creator_id === user?.id);
   const patch = (d: Parameters<typeof update.mutate>[0]) =>
@@ -145,8 +156,13 @@ function EditForm({ taskId, onClose, onOpenTask }: { taskId: number; onClose: ()
   const observerIds = task.members.filter((m) => m.kind === 'observer').map((m) => m.user_id);
 
   return (
-    <>
-      <ModalHeader title={`Задача #${task.id}`} onClose={onClose}>
+    <div className="mx-auto max-w-3xl p-4 sm:p-6">
+      <div className="mb-4 flex items-center gap-3">
+        <BackLink />
+        <StatusMenu taskId={task.id} status={task.status as Status} />
+        {task.recurrence && <span className="text-xs text-muted">↻ {RECURRENCE_LABELS[task.recurrence.freq]}</span>}
+        {task.parent_id && <Link to={`/tasks/${task.parent_id}`} className="text-xs text-accent hover:underline">↑ родитель #{task.parent_id}</Link>}
+        <span className="ml-auto text-xs text-faint">#{task.id}</span>
         <Dropdown trigger={<button className="rounded-md p-1.5 text-muted hover:bg-hover hover:text-text"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="3" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="8" cy="13" r="1.4"/></svg></button>}>
           {editable && (
             <DropdownItem onClick={() => {
@@ -156,15 +172,9 @@ function EditForm({ taskId, onClose, onOpenTask }: { taskId: number; onClose: ()
           )}
           {can('task.delete') && <DropdownItem danger onClick={() => setConfirmDel(true)}>Удалить задачу</DropdownItem>}
         </Dropdown>
-      </ModalHeader>
+      </div>
 
-      <div className="max-h-[72vh] overflow-y-auto p-5">
-        <div className="mb-3 flex items-center gap-2">
-          <StatusMenu taskId={task.id} status={task.status as Status} />
-          {task.recurrence && <span className="text-xs text-muted">↻ {RECURRENCE_LABELS[task.recurrence.freq]}</span>}
-          {task.parent_id && <button onClick={() => onOpenTask(task.parent_id!)} className="text-xs text-accent hover:underline">↑ родитель #{task.parent_id}</button>}
-        </div>
-
+      <div className="rounded-xl border border-border bg-raised p-5">
         <Input value={title} onChange={(e) => setTitle(e.target.value)} onBlur={saveTitle} onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLElement).blur()} disabled={!editable} className="mb-3 border-transparent text-base font-semibold hover:border-border focus:border-accent" />
 
         <Textarea value={desc} onChange={(e) => setDesc(e.target.value)} onBlur={saveDesc} disabled={!editable} placeholder="Описание…" className="mb-4" />
@@ -200,7 +210,7 @@ function EditForm({ taskId, onClose, onOpenTask }: { taskId: number; onClose: ()
         <Tabs tabs={TABS.map((t) => ({ ...t, count: t.id === 'comments' ? task.counts?.comments : t.id === 'files' ? task.counts?.files : t.id === 'subtasks' ? task.counts?.subtasks : undefined }))} value={tab} onChange={setTab} />
         <div className="pt-4">
           {tab === 'checklist' && <Checklist taskId={task.id} />}
-          {tab === 'subtasks' && <SubtaskList parentId={task.id} onOpen={onOpenTask} />}
+          {tab === 'subtasks' && <SubtaskList parentId={task.id} onOpen={(sid) => nav(`/tasks/${sid}`)} />}
           {tab === 'comments' && <CommentList taskId={task.id} />}
           {tab === 'files' && <FileList taskId={task.id} />}
           {tab === 'time' && <TimeSection taskId={task.id} estimate={task.time_estimate} />}
@@ -209,8 +219,8 @@ function EditForm({ taskId, onClose, onOpenTask }: { taskId: number; onClose: ()
       </div>
 
       <ConfirmDialog open={confirmDel} onClose={() => setConfirmDel(false)} title="Удалить задачу?" body="Задача и все вложения будут удалены безвозвратно."
-        onConfirm={() => { del.mutate(task.id, { onSuccess: onClose }); }} />
-    </>
+        onConfirm={() => { del.mutate(task.id, { onSuccess: () => nav('/') }); }} />
+    </div>
   );
 }
 

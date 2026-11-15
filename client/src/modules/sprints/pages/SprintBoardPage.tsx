@@ -1,14 +1,13 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { sprintsApi } from '../api';
 import { STATUSES, STATUS_LABELS, SPRINT_STATUS_LABELS } from '@crm/contracts';
 import { PageSpinner, Badge, EmptyState } from '../../../shared/ui';
 import { BoardColumn } from '../../tasks/components/BoardColumn';
-import { TaskModal } from '../../tasks/components/TaskModal';
 import { useSelection } from '../../tasks/hooks';
 import { BulkBar } from '../../tasks/components/BulkBar';
 import { formatDate } from '../../../shared/utils/format';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 export function SprintBoardPage() {
   const { id } = useParams();
@@ -18,7 +17,7 @@ export function SprintBoardPage() {
     queryFn: () => sprintsApi.tasks(sprintId),
     enabled: !isNaN(sprintId),
   });
-  const [openId, setOpenId] = useState<number | null>(null);
+  const nav = useNavigate();
   const sel = useSelection();
 
   const byStatus = useMemo(() => {
@@ -44,13 +43,12 @@ export function SprintBoardPage() {
         ) : (
           <div className="flex h-full gap-3 overflow-x-auto p-4">
             {STATUSES.map((s) => (
-              <BoardColumn key={s} status={s} title={STATUS_LABELS[s]} tasks={byStatus.get(s) ?? []} onOpen={setOpenId} selected={sel.selected} onSelect={sel.toggle} />
+              <BoardColumn key={s} status={s} title={STATUS_LABELS[s]} tasks={byStatus.get(s) ?? []} onOpen={(id) => nav(`/tasks/${id}`)} selected={sel.selected} onSelect={sel.toggle} />
             ))}
           </div>
         )}
       </div>
       <BulkBar selected={sel.selected} onDone={sel.clear} />
-      <TaskModal taskId={openId} open={openId !== null} onClose={() => setOpenId(null)} onOpenTask={setOpenId} />
     </div>
   );
 }

@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTasks } from '../../tasks/hooks';
-import { TaskModal } from '../../tasks/components/TaskModal';
 import { PageSpinner, EmptyState, Avatar } from '../../../shared/ui';
 import { STATUS_LABELS, type TaskView } from '@crm/contracts';
 import { cn } from '../../../shared/utils/cn';
@@ -13,7 +13,7 @@ const dstr = (d: Date) => d.toISOString().slice(0, 10);
 
 export function GanttPage() {
   const { data: tasks = [], isLoading } = useTasks();
-  const [openId, setOpenId] = useState<number | null>(null);
+  const nav = useNavigate();
 
   // Диапазон: от самой ранней даты до самой поздней (+ запас)
   const { rows, start, days } = useMemo(() => {
@@ -64,7 +64,7 @@ export function GanttPage() {
           {rows.map(({ task, from, to }, i) => (
             <div key={task.id} className="flex border-b border-border/60" style={{ height: ROW }}>
               <button
-                onClick={() => setOpenId(task.id)}
+                onClick={() => nav(`/tasks/${task.id}`)}
                 className="sticky left-0 z-10 flex w-50 shrink-0 items-center gap-2 border-r border-border bg-raised px-3 text-left hover:bg-hover"
                 style={{ width: 200 }}
               >
@@ -73,7 +73,7 @@ export function GanttPage() {
               </button>
               <div className="relative flex-1" style={{ width: W }}>
                 <div
-                  onClick={() => setOpenId(task.id)}
+                  onClick={() => nav(`/tasks/${task.id}`)}
                   title={`${task.title} · ${STATUS_LABELS[task.status]} · ${from} → ${to}`}
                   className="absolute top-[7px] h-5 cursor-pointer rounded-md opacity-90 transition-opacity hover:opacity-100"
                   style={{ left: x(from), width: Math.max(DAY * 0.8, x(to) - x(from) + DAY), background: BAR_COLORS[task.status] }}
@@ -88,7 +88,6 @@ export function GanttPage() {
           </div>
         </div>
       </div>
-      <TaskModal taskId={openId} open={openId !== null} onClose={() => setOpenId(null)} onOpenTask={setOpenId} />
     </div>
   );
 }

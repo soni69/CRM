@@ -1,17 +1,27 @@
+import { useState } from 'react';
 import { useUsers } from '../hooks';
 import { cn } from '../../../shared/utils/cn';
-import { Avatar } from '../../../shared/ui';
+import { Avatar, Input } from '../../../shared/ui';
 
 // Мультивыбор пользователей — для соисполнителей и наблюдателей
 export function MemberPicker({ value, onChange, exclude = [] }: {
   value: number[]; onChange: (ids: number[]) => void; exclude?: number[];
 }) {
   const { data: users = [] } = useUsers();
-  const list = users.filter((u) => !exclude.includes(u.id));
+  const [q, setQ] = useState('');
+  const needle = q.trim().toLowerCase();
+  const list = users.filter((u) =>
+    !exclude.includes(u.id) &&
+    (!needle || u.name.toLowerCase().includes(needle) || u.email.toLowerCase().includes(needle)),
+  );
   const toggle = (id: number) =>
     onChange(value.includes(id) ? value.filter((x) => x !== id) : [...value, id]);
   return (
-    <div className="flex max-h-36 flex-col gap-0.5 overflow-y-auto rounded-lg border border-border p-1">
+    <div className="rounded-lg border border-border">
+      <div className="border-b border-border p-1">
+        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Поиск сотрудника…" className="h-7 border-0 text-xs" />
+      </div>
+      <div className="flex max-h-36 flex-col gap-0.5 overflow-y-auto p-1">
       {list.map((u) => {
         const sel = value.includes(u.id);
         return (
@@ -30,7 +40,8 @@ export function MemberPicker({ value, onChange, exclude = [] }: {
           </button>
         );
       })}
-      {!list.length && <p className="p-2 text-xs text-faint">Нет пользователей</p>}
+      {!list.length && <p className="p-2 text-xs text-faint">{needle ? 'Никого не найдено' : 'Нет пользователей'}</p>}
+      </div>
     </div>
   );
 }

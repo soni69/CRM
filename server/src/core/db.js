@@ -132,4 +132,6 @@ CREATE INDEX IF NOT EXISTS idx_sessions_user   ON sessions(user_id);
 
 export function migrate() {
   db.exec(SCHEMA);
+  const taskCols = db.prepare('PRAGMA table_info(tasks)').all().map((c) => c.name);
+  if (!taskCols.includes('due_time')) db.exec('ALTER TABLE tasks ADD COLUMN due_time TEXT');
 }

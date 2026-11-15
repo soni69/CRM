@@ -74,11 +74,11 @@ export function listTasks(user, extraWhere = '1=1', extraParams = []) {
 
 export function createTaskRow(data, creatorId) {
   const { lastInsertRowid } = q.run(
-    `INSERT INTO tasks (title, description, status, priority, start_date, due_date,
+    `INSERT INTO tasks (title, description, status, priority, start_date, due_date, due_time,
        assignee_id, creator_id, parent_id, sprint_id, time_estimate)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
     data.title, data.description ?? '', 'new', data.priority ?? 'medium',
-    data.start_date ?? null, data.due_date ?? null,
+    data.start_date ?? null, data.due_date ?? null, data.due_time ?? null,
     data.assignee_id ?? null, creatorId, data.parent_id ?? null,
     data.sprint_id ?? null, data.time_estimate ?? 0,
   );

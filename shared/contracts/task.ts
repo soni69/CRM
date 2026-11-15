@@ -44,6 +44,7 @@ export const recurrenceSchema = z.object({
 export type Recurrence = z.infer<typeof recurrenceSchema>;
 
 const dateStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Формат даты ГГГГ-ММ-ДД');
+const timeStr = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Формат времени ЧЧ:ММ');
 
 export const taskSchema = z.object({
   id: z.number(),
@@ -53,6 +54,7 @@ export const taskSchema = z.object({
   priority: z.enum(PRIORITIES),
   start_date: dateStr.nullable(),
   due_date: dateStr.nullable(),
+  due_time: z.string().nullable(),
   assignee_id: z.number().nullable(),
   creator_id: z.number(),
   parent_id: z.number().nullable(),
@@ -96,6 +98,7 @@ export const createTaskSchema = z.object({
   priority: z.enum(PRIORITIES).default('medium'),
   start_date: dateStr.nullish(),
   due_date: dateStr.nullish(),
+  due_time: timeStr.nullish(),
   assignee_id: z.number().int().positive().nullish(),
   parent_id: z.number().int().positive().nullish(),
   sprint_id: z.number().int().positive().nullish(),

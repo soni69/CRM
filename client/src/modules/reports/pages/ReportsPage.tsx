@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { reportsApi } from '../api';
-import { PageSpinner, Field, Input, Badge } from '../../../shared/ui';
+import { PageSpinner, Field, Badge, DatePicker } from '../../../shared/ui';
 import { formatDate, formatMinutes } from '../../../shared/utils/format';
 import { useCan } from '../../roles';
 
@@ -25,8 +25,8 @@ export function ReportsPage() {
         <h1 className="text-lg font-semibold">Отчёты</h1>
         {!can('report.team') && <Badge tone="gray">только ваши задачи</Badge>}
         <div className="ml-auto flex items-end gap-2">
-          <Field label="С"><Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="h-8 w-auto" /></Field>
-          <Field label="По"><Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="h-8 w-auto" /></Field>
+          <Field label="С"><DatePicker value={from} onChange={(v) => setFrom(v ?? '')} className="w-40" /></Field>
+          <Field label="По"><DatePicker value={to} onChange={(v) => setTo(v ?? '')} className="w-40" /></Field>
         </div>
       </div>
 

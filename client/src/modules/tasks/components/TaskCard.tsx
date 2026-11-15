@@ -18,7 +18,7 @@ export function TaskCard({ task, onOpen, selected, onSelect }: {
   task: TaskView; onOpen: (id: number) => void; selected: boolean; onSelect: (id: number) => void;
 }) {
   const { user } = useAuth();
-  const overdue = isOverdue(task.due_date, task.status);
+  const overdue = isOverdue(task.due_date, task.status, task.due_time);
   const c = task.counts;
   const canSelect = user && (user.role !== 'member' || task.creator_id === user.id || task.assignee_id === user.id);
 
@@ -58,7 +58,7 @@ export function TaskCard({ task, onOpen, selected, onSelect }: {
         <div className="flex items-center gap-2 text-[11px] text-faint">
           {task.due_date && (
             <span className={cn('font-mono', overdue && 'font-semibold text-danger')}>
-              {overdue ? '⚠ ' : ''}{formatDate(task.due_date)}
+              {overdue ? '⚠ ' : ''}{formatDate(task.due_date)}{task.due_time ? ` ${task.due_time}` : ''}
             </span>
           )}
           {c?.subtasks ? <span title="Подзадачи" className="inline-flex items-center gap-0.5"><Ico path="M4 4h8v8H4z" />{c.subtasks}</span> : null}

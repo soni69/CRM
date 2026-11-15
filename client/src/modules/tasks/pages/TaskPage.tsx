@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
-  Tabs, Button, Field, Input, Textarea, Select,
+  Tabs, Button, Field, Input, Textarea, Select, DatePicker,
   ConfirmDialog, Dropdown, DropdownItem, useToast, PageSpinner,
 } from '../../../shared/ui';
 import {
@@ -53,7 +53,7 @@ export function NewTaskPage() {
   const create = useCreateTask();
   const { data: templates = [] } = useTemplates();
   const tmut = useTemplateMutations();
-  const [f, setF] = useState({ title: '', description: '', priority: 'medium' as const, assignee_id: null as number | null, due_date: '', sprint_id: null as number | null, tag_ids: [] as number[], template_id: '', participant_ids: [] as number[], observer_ids: [] as number[] });
+  const [f, setF] = useState({ title: '', description: '', priority: 'medium' as const, assignee_id: null as number | null, due_date: '', due_time: null as string | null, sprint_id: null as number | null, tag_ids: [] as number[], template_id: '', participant_ids: [] as number[], observer_ids: [] as number[] });
 
   const submit = () => {
     if (!f.title.trim() && !f.template_id) return;
@@ -65,7 +65,7 @@ export function NewTaskPage() {
     }
     create.mutate({
       title: f.title, description: f.description, priority: f.priority,
-      assignee_id: f.assignee_id, due_date: f.due_date || null, sprint_id: f.sprint_id,
+      assignee_id: f.assignee_id, due_date: f.due_date || null, due_time: f.due_time, sprint_id: f.sprint_id,
       tag_ids: f.tag_ids, time_estimate: 0, participant_ids: f.participant_ids, observer_ids: f.observer_ids,
     }, {
       onSuccess: (d) => nav(`/tasks/${d.task.id}`, { replace: true }),
@@ -97,7 +97,7 @@ export function NewTaskPage() {
                   {PRIORITIES.map((p) => <option key={p} value={p}>{PRIORITY_LABELS[p]}</option>)}
                 </Select>
               </Field>
-              <Field label="Дедлайн"><Input type="date" value={f.due_date} onChange={(e) => setF({ ...f, due_date: e.target.value })} /></Field>
+              <Field label="Дедлайн"><DatePicker value={f.due_date} onChange={(v) => setF({ ...f, due_date: v ?? '' })} time timeValue={f.due_time} onTimeChange={(v) => setF({ ...f, due_time: v })} placeholder="Дата и время" /></Field>
               <Field label="Спринт"><SprintSelect value={f.sprint_id} onChange={(v) => setF({ ...f, sprint_id: v })} /></Field>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -206,8 +206,8 @@ export function TaskPage() {
               </Select>
             </Field>
             <Field label="Оценка, мин"><Input type="number" min={0} disabled={!editable} defaultValue={task.time_estimate || ''} key={'est'+task.id} onBlur={(e) => patch({ time_estimate: Number(e.target.value) || 0 })} /></Field>
-            <Field label="Начало"><Input type="date" disabled={!editable} value={task.start_date ?? ''} onChange={(e) => patch({ start_date: e.target.value || null })} /></Field>
-            <Field label="Дедлайн"><Input type="date" disabled={!editable} value={task.due_date ?? ''} onChange={(e) => patch({ due_date: e.target.value || null })} /></Field>
+            <Field label="Начало"><DatePicker disabled={!editable} value={task.start_date} onChange={(v) => patch({ start_date: v })} /></Field>
+            <Field label="Дедлайн"><DatePicker disabled={!editable} value={task.due_date} onChange={(v) => patch({ due_date: v })} time timeValue={task.due_time} onTimeChange={(v) => patch({ due_time: v })} placeholder="Дата и время" /></Field>
             <Field label="Повтор">
               <Select disabled={!editable} value={task.recurrence?.freq ?? ''} onChange={(e) => setRec(e.target.value || null)}>
                 <option value="">Нет</option>

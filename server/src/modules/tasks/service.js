@@ -47,7 +47,7 @@ export function updateTask(user, id, data) {
   if (!canEditTask(user, task)) throw httpError(403, 'Нет прав на редактирование');
 
   const diff = {};
-  for (const f of ['title', 'description', 'priority', 'start_date', 'due_date', 'parent_id', 'sprint_id', 'time_estimate']) {
+  for (const f of ['title', 'description', 'priority', 'start_date', 'due_date', 'due_time', 'parent_id', 'sprint_id', 'time_estimate']) {
     if (f in data) diff[f] = data[f];
   }
   if ('assignee_id' in data && data.assignee_id !== task.assignee_id) {

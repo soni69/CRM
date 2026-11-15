@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useSprints, useSprintMutations } from '../hooks';
-import { Button, Field, Input, Modal, ModalHeader, PageSpinner, EmptyState, Badge, ConfirmDialog } from '../../../shared/ui';
+import { Button, Field, Input, Modal, ModalHeader, PageSpinner, EmptyState, Badge, ConfirmDialog, DatePicker } from '../../../shared/ui';
 import type { ListedSprint } from '../api';
 import { SPRINT_STATUS_LABELS, type CreateSprintInput } from '@crm/contracts';
 import { formatDate } from '../../../shared/utils/format';
@@ -74,8 +74,8 @@ function CreateSprintModal({ open, onClose }: { open: boolean; onClose: () => vo
         <Field label="Название"><Input required autoFocus value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="Спринт 2" /></Field>
         <Field label="Цель"><Input value={f.goal} onChange={(e) => setF({ ...f, goal: e.target.value })} placeholder="Что должны успеть…" /></Field>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Начало"><Input type="date" required value={f.start_date} onChange={(e) => setF({ ...f, start_date: e.target.value })} /></Field>
-          <Field label="Конец"><Input type="date" required value={f.end_date} onChange={(e) => setF({ ...f, end_date: e.target.value })} /></Field>
+          <Field label="Начало"><DatePicker value={f.start_date} onChange={(v) => v && setF({ ...f, start_date: v })} /></Field>
+          <Field label="Конец"><DatePicker value={f.end_date} onChange={(v) => v && setF({ ...f, end_date: v })} /></Field>
         </div>
         <Button type="submit" disabled={mut.create.isPending}>Создать</Button>
       </form>

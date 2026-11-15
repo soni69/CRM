@@ -20,7 +20,7 @@ export function ReportsPage() {
   const t = data.totals;
 
   return (
-    <div className="mx-auto max-w-4xl p-4 sm:p-6">
+    <div className="mx-auto max-w-6xl p-4 sm:p-6">
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <h1 className="text-lg font-semibold">Отчёты</h1>
         {!can('report.team') && <Badge tone="gray">только ваши задачи</Badge>}

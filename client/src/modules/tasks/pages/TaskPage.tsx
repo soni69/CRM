@@ -74,7 +74,7 @@ export function NewTaskPage() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl p-4 sm:p-6">
+    <div className="mx-auto max-w-3xl p-4 sm:p-6">
       <div className="mb-4"><BackLink /></div>
       <h1 className="mb-4 text-lg font-semibold">Новая задача</h1>
       <div className="flex flex-col gap-3.5 rounded-xl border border-border bg-raised p-5">
@@ -156,7 +156,7 @@ export function TaskPage() {
   const observerIds = task.members.filter((m) => m.kind === 'observer').map((m) => m.user_id);
 
   return (
-    <div className="mx-auto max-w-3xl p-4 sm:p-6">
+    <div className="mx-auto max-w-6xl p-4 sm:p-6">
       <div className="mb-4 flex items-center gap-3">
         <BackLink />
         <StatusMenu taskId={task.id} status={task.status as Status} />
@@ -174,48 +174,54 @@ export function TaskPage() {
         </Dropdown>
       </div>
 
-      <div className="rounded-xl border border-border bg-raised p-5">
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} onBlur={saveTitle} onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLElement).blur()} disabled={!editable} className="mb-3 border-transparent text-base font-semibold hover:border-border focus:border-accent" />
+      <div className="flex flex-col gap-4 lg:flex-row">
+        {/* Основной контент */}
+        <div className="min-w-0 flex-1 rounded-xl border border-border bg-raised p-5">
+          <Input value={title} onChange={(e) => setTitle(e.target.value)} onBlur={saveTitle} onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLElement).blur()} disabled={!editable} className="mb-3 border-transparent text-base font-semibold hover:border-border focus:border-accent" />
 
-        <Textarea value={desc} onChange={(e) => setDesc(e.target.value)} onBlur={saveDesc} disabled={!editable} placeholder="Описание…" className="mb-4" />
+          <Textarea value={desc} onChange={(e) => setDesc(e.target.value)} onBlur={saveDesc} disabled={!editable} placeholder="Описание…" className="mb-4" />
 
-        <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <Field label="Исполнитель"><AssigneeSelect value={task.assignee_id} onChange={(v) => patch({ assignee_id: v })} /></Field>
-          <Field label="Приоритет">
-            <Select value={task.priority} disabled={!editable} onChange={(e) => patch({ priority: e.target.value as never })}>
-              {PRIORITIES.map((p) => <option key={p} value={p}>{PRIORITY_LABELS[p]}</option>)}
-            </Select>
-          </Field>
-          <Field label="Оценка, мин"><Input type="number" min={0} disabled={!editable} defaultValue={task.time_estimate || ''} key={'est'+task.id} onBlur={(e) => patch({ time_estimate: Number(e.target.value) || 0 })} /></Field>
-          <Field label="Начало"><Input type="date" disabled={!editable} value={task.start_date ?? ''} onChange={(e) => patch({ start_date: e.target.value || null })} /></Field>
-          <Field label="Дедлайн"><Input type="date" disabled={!editable} value={task.due_date ?? ''} onChange={(e) => patch({ due_date: e.target.value || null })} /></Field>
-          <Field label="Повтор">
-            <Select disabled={!editable} value={task.recurrence?.freq ?? ''} onChange={(e) => setRec(e.target.value || null)}>
-              <option value="">Нет</option>
-              {RECURRENCE_FREQS.map((r) => <option key={r} value={r}>{RECURRENCE_LABELS[r]}</option>)}
-            </Select>
-          </Field>
-          <Field label="Спринт"><SprintSelect value={task.sprint_id} onChange={(v) => patch({ sprint_id: v })} /></Field>
-        </div>
-
-        {editable && (
-          <div className="mb-4 grid grid-cols-2 gap-3">
-            <Field label="Соисполнители"><MemberPicker value={participantIds} onChange={(v) => patch({ participant_ids: v, observer_ids: observerIds })} /></Field>
-            <Field label="Наблюдатели"><MemberPicker value={observerIds} onChange={(v) => patch({ participant_ids: participantIds, observer_ids: v })} /></Field>
+          <Tabs tabs={TABS.map((t) => ({ ...t, count: t.id === 'comments' ? task.counts?.comments : t.id === 'files' ? task.counts?.files : t.id === 'subtasks' ? task.counts?.subtasks : undefined }))} value={tab} onChange={setTab} />
+          <div className="pt-4">
+            {tab === 'checklist' && <Checklist taskId={task.id} />}
+            {tab === 'subtasks' && <SubtaskList parentId={task.id} onOpen={(sid) => nav(`/tasks/${sid}`)} />}
+            {tab === 'comments' && <CommentList taskId={task.id} />}
+            {tab === 'files' && <FileList taskId={task.id} />}
+            {tab === 'time' && <TimeSection taskId={task.id} estimate={task.time_estimate} />}
+            {tab === 'history' && <HistoryFeed taskId={task.id} />}
           </div>
-        )}
-
-        {editable && <Field label="Теги" className="mb-4"><TagPicker value={task.tags.map((t) => t.id)} onChange={(v) => patch({ tag_ids: v })} /></Field>}
-
-        <Tabs tabs={TABS.map((t) => ({ ...t, count: t.id === 'comments' ? task.counts?.comments : t.id === 'files' ? task.counts?.files : t.id === 'subtasks' ? task.counts?.subtasks : undefined }))} value={tab} onChange={setTab} />
-        <div className="pt-4">
-          {tab === 'checklist' && <Checklist taskId={task.id} />}
-          {tab === 'subtasks' && <SubtaskList parentId={task.id} onOpen={(sid) => nav(`/tasks/${sid}`)} />}
-          {tab === 'comments' && <CommentList taskId={task.id} />}
-          {tab === 'files' && <FileList taskId={task.id} />}
-          {tab === 'time' && <TimeSection taskId={task.id} estimate={task.time_estimate} />}
-          {tab === 'history' && <HistoryFeed taskId={task.id} />}
         </div>
+
+        {/* Свойства — сайдбар на широких экранах */}
+        <aside className="flex w-full shrink-0 flex-col gap-3 self-start rounded-xl border border-border bg-raised p-5 lg:w-72 xl:w-80">
+          <Field label="Исполнитель"><AssigneeSelect value={task.assignee_id} onChange={(v) => patch({ assignee_id: v })} /></Field>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-1">
+            <Field label="Приоритет">
+              <Select value={task.priority} disabled={!editable} onChange={(e) => patch({ priority: e.target.value as never })}>
+                {PRIORITIES.map((p) => <option key={p} value={p}>{PRIORITY_LABELS[p]}</option>)}
+              </Select>
+            </Field>
+            <Field label="Оценка, мин"><Input type="number" min={0} disabled={!editable} defaultValue={task.time_estimate || ''} key={'est'+task.id} onBlur={(e) => patch({ time_estimate: Number(e.target.value) || 0 })} /></Field>
+            <Field label="Начало"><Input type="date" disabled={!editable} value={task.start_date ?? ''} onChange={(e) => patch({ start_date: e.target.value || null })} /></Field>
+            <Field label="Дедлайн"><Input type="date" disabled={!editable} value={task.due_date ?? ''} onChange={(e) => patch({ due_date: e.target.value || null })} /></Field>
+            <Field label="Повтор">
+              <Select disabled={!editable} value={task.recurrence?.freq ?? ''} onChange={(e) => setRec(e.target.value || null)}>
+                <option value="">Нет</option>
+                {RECURRENCE_FREQS.map((r) => <option key={r} value={r}>{RECURRENCE_LABELS[r]}</option>)}
+              </Select>
+            </Field>
+            <Field label="Спринт"><SprintSelect value={task.sprint_id} onChange={(v) => patch({ sprint_id: v })} /></Field>
+          </div>
+
+          {editable && (
+            <>
+              <div className="border-t border-border" />
+              <Field label="Соисполнители"><MemberPicker value={participantIds} onChange={(v) => patch({ participant_ids: v, observer_ids: observerIds })} /></Field>
+              <Field label="Наблюдатели"><MemberPicker value={observerIds} onChange={(v) => patch({ participant_ids: participantIds, observer_ids: v })} /></Field>
+              <Field label="Теги"><TagPicker value={task.tags.map((t) => t.id)} onChange={(v) => patch({ tag_ids: v })} /></Field>
+            </>
+          )}
+        </aside>
       </div>
 
       <ConfirmDialog open={confirmDel} onClose={() => setConfirmDel(false)} title="Удалить задачу?" body="Задача и все вложения будут удалены безвозвратно."

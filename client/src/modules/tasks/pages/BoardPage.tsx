@@ -83,7 +83,7 @@ export function BoardPage() {
             </div>
           </>
         ) : (
-          <div className="mx-auto max-w-4xl">
+          <div className="mx-auto max-w-6xl">
             {STATUSES.map((s) => (byStatus.get(s)?.length ?? 0) > 0 && (
               <div key={s}>
                 <h3 className="bg-surface px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted">{STATUS_LABELS[s]} · {byStatus.get(s)!.length}</h3>

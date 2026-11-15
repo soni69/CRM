@@ -6,9 +6,13 @@ import { ApiError } from '../../shared/api/client';
 
 const KEY = ['tasks'];
 
-// Инвалидация всех списков задач (board, search, sprint)
+// Инвалидация всех списков задач (board, search, sprint) и открытых карточек
 export const invalidateTasks = (qc: ReturnType<typeof useQueryClient>) =>
-  Promise.all([qc.invalidateQueries({ queryKey: ['tasks'] }), qc.invalidateQueries({ queryKey: ['search-tasks'] })]);
+  Promise.all([
+    qc.invalidateQueries({ queryKey: ['tasks'] }),
+    qc.invalidateQueries({ queryKey: ['search-tasks'] }),
+    qc.invalidateQueries({ queryKey: ['task'] }),
+  ]);
 
 export function useTasks() {
   return useQuery({ queryKey: KEY, queryFn: () => tasksApi.list().then((r) => r.tasks) });

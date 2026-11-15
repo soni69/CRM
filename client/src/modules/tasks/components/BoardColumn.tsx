@@ -31,7 +31,7 @@ export function BoardColumn({ status, title, tasks, onOpen, selected, onSelect }
   };
 
   return (
-    <section className={cn('flex min-h-40 w-72 shrink-0 flex-col rounded-xl border border-border border-t-2 bg-surface sm:w-80', COL_COLOR[status])}>
+    <section className={cn('flex min-h-40 min-w-60 flex-1 basis-0 flex-col rounded-xl border border-border border-t-2 bg-surface', COL_COLOR[status])}>
       <header className="flex items-center justify-between px-3 py-2.5">
         <h3 className="text-sm font-semibold">{title}</h3>
         <span className="text-xs text-faint">{tasks.length}</span>

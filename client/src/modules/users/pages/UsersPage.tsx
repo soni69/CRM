@@ -32,7 +32,7 @@ export function UsersPage() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl p-4 sm:p-6">
+    <div className="mx-auto max-w-5xl p-4 sm:p-6">
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-lg font-semibold">Пользователи</h1>
         <Button size="sm" onClick={() => { setError(''); setCreating(true); }}>+ Новый пользователь</Button>

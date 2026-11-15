@@ -29,7 +29,12 @@ export const createSprintSchema = z.object({
 });
 export type CreateSprintInput = z.infer<typeof createSprintSchema>;
 
-export const updateSprintSchema = createSprintSchema.partial().extend({
+// см. task.ts — .default() пробивается через .partial(), снимаем
+export const updateSprintSchema = z.object(
+  Object.fromEntries(
+    Object.entries(createSprintSchema.shape).map(([k, s]) => [k, s instanceof z.ZodDefault ? s.unwrap() : s]),
+  ),
+).partial().extend({
   status: z.enum(SPRINT_STATUSES).optional(),
 });
 export type UpdateSprintInput = z.infer<typeof updateSprintSchema>;

@@ -19,7 +19,7 @@ export function SprintsPage() {
   if (isLoading) return <PageSpinner />;
 
   return (
-    <div className="mx-auto max-w-3xl p-4 sm:p-6">
+    <div className="mx-auto max-w-5xl p-4 sm:p-6">
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-lg font-semibold">Спринты</h1>
         <Button size="sm" onClick={() => setCreating(true)}>+ Спринт</Button>

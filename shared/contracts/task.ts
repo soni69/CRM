@@ -106,7 +106,12 @@ export const createTaskSchema = z.object({
 });
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;
 
-export const updateTaskSchema = createTaskSchema.partial();
+// .partial() не снимает .default() — без снятия дефолтов любой PATCH
+// подставлял бы пустые значения и затирал теги, участников и поля
+const stripDefaults = (shape: Record<string, z.ZodType>) =>
+  Object.fromEntries(Object.entries(shape).map(([k, s]) => [k, s instanceof z.ZodDefault ? s.unwrap() : s]));
+
+export const updateTaskSchema = z.object(stripDefaults(createTaskSchema.shape)).partial();
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
 
 export const updateStatusSchema = z.object({ status: z.enum(STATUSES) });

@@ -53,7 +53,7 @@ export function NewTaskPage() {
   const create = useCreateTask();
   const { data: templates = [] } = useTemplates();
   const tmut = useTemplateMutations();
-  const [f, setF] = useState({ title: '', description: '', priority: 'medium' as const, assignee_id: null as number | null, due_date: '', sprint_id: null as number | null, tag_ids: [] as number[], template_id: '' });
+  const [f, setF] = useState({ title: '', description: '', priority: 'medium' as const, assignee_id: null as number | null, due_date: '', sprint_id: null as number | null, tag_ids: [] as number[], template_id: '', participant_ids: [] as number[], observer_ids: [] as number[] });
 
   const submit = () => {
     if (!f.title.trim() && !f.template_id) return;
@@ -66,7 +66,7 @@ export function NewTaskPage() {
     create.mutate({
       title: f.title, description: f.description, priority: f.priority,
       assignee_id: f.assignee_id, due_date: f.due_date || null, sprint_id: f.sprint_id,
-      tag_ids: f.tag_ids, time_estimate: 0, participant_ids: [], observer_ids: [],
+      tag_ids: f.tag_ids, time_estimate: 0, participant_ids: f.participant_ids, observer_ids: f.observer_ids,
     }, {
       onSuccess: (d) => nav(`/tasks/${d.task.id}`, { replace: true }),
       onError: (e) => toast(e instanceof ApiError ? e.message : 'Ошибка', 'err'),
@@ -99,6 +99,10 @@ export function NewTaskPage() {
               </Field>
               <Field label="Дедлайн"><Input type="date" value={f.due_date} onChange={(e) => setF({ ...f, due_date: e.target.value })} /></Field>
               <Field label="Спринт"><SprintSelect value={f.sprint_id} onChange={(v) => setF({ ...f, sprint_id: v })} /></Field>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Соисполнители"><MemberPicker value={f.participant_ids} onChange={(v) => setF({ ...f, participant_ids: v })} /></Field>
+              <Field label="Наблюдатели"><MemberPicker value={f.observer_ids} onChange={(v) => setF({ ...f, observer_ids: v })} /></Field>
             </div>
             <Field label="Теги"><TagPicker value={f.tag_ids} onChange={(v) => setF({ ...f, tag_ids: v })} /></Field>
           </>

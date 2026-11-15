@@ -1,0 +1,8 @@
+node_modules
+client/dist
+data
+uploads
+*.tar.gz
+.git
+.DS_Store
+.env

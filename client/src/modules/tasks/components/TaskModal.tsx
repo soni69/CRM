@@ -1,0 +1,222 @@
+import { useEffect, useState } from 'react';
+import {
+  Modal, ModalHeader, Tabs, Button, Field, Input, Textarea, Select,
+  ConfirmDialog, Dropdown, DropdownItem, useToast,
+} from '../../../shared/ui';
+import {
+  PRIORITIES, PRIORITY_LABELS, RECURRENCE_FREQS, RECURRENCE_LABELS,
+  type TaskView, type Status,
+} from '@crm/contracts';
+import { useTask, useUpdateTask, useDeleteTask, useCreateTask, invalidateTasks } from '../hooks';
+import { tasksApi } from '../api';
+import { useCan } from '../../../modules/roles';
+import { useAuth } from '../../../modules/auth';
+import { AssigneeSelect, MemberPicker } from '../../../modules/users';
+import { TagPicker } from '../../../modules/tags';
+import { SprintSelect } from '../../../modules/sprints/components/SprintSelect';
+import { Checklist } from '../../../modules/checklists';
+import { CommentList } from '../../../modules/comments';
+import { FileList } from '../../../modules/files';
+import { HistoryFeed } from '../../../modules/history';
+import { TimeSection } from '../../../modules/timetracking';
+import { useTemplates, useTemplateMutations, templatesApi } from '../../../modules/templates';
+import { StatusMenu } from './StatusMenu';
+import { SubtaskList } from './SubtaskList';
+import { useQueryClient } from '@tanstack/react-query';
+import { ApiError } from '../../../shared/api/client';
+
+type Tab = 'checklist' | 'subtasks' | 'comments' | 'files' | 'time' | 'history';
+const TABS: { id: Tab; label: string }[] = [
+  { id: 'checklist', label: 'Чек-лист' },
+  { id: 'subtasks', label: 'Подзадачи' },
+  { id: 'comments', label: 'Комментарии' },
+  { id: 'files', label: 'Файлы' },
+  { id: 'time', label: 'Время' },
+  { id: 'history', label: 'История' },
+];
+
+export function TaskModal({ taskId, open, onClose, onOpenTask }: {
+  taskId: number | null; open: boolean; onClose: () => void; onOpenTask: (id: number) => void;
+}) {
+  return (
+    <Modal open={open} onClose={onClose} className="max-w-2xl">
+      {taskId === null
+        ? <CreateForm onClose={onClose} onOpenTask={onOpenTask} />
+        : <EditForm taskId={taskId} onClose={onClose} onOpenTask={onOpenTask} />}
+    </Modal>
+  );
+}
+
+// ---------- Создание ----------
+function CreateForm({ onClose, onOpenTask }: { onClose: () => void; onOpenTask: (id: number) => void }) {
+  const qc = useQueryClient();
+  const toast = useToast();
+  const create = useCreateTask();
+  const { data: templates = [] } = useTemplates();
+  const tmut = useTemplateMutations();
+  const [f, setF] = useState({ title: '', description: '', priority: 'medium' as const, assignee_id: null as number | null, due_date: '', sprint_id: null as number | null, tag_ids: [] as number[], template_id: '' });
+
+  const submit = () => {
+    if (!f.title.trim() && !f.template_id) return;
+    if (f.template_id) {
+      tmut.createTask.mutate({ id: Number(f.template_id), title: f.title.trim() || undefined }, {
+        onSuccess: (d) => { onClose(); onOpenTask(d.task.id); },
+      });
+      return;
+    }
+    create.mutate({
+      title: f.title, description: f.description, priority: f.priority,
+      assignee_id: f.assignee_id, due_date: f.due_date || null, sprint_id: f.sprint_id,
+      tag_ids: f.tag_ids, time_estimate: 0, participant_ids: [], observer_ids: [],
+    }, {
+      onSuccess: (d) => { onClose(); onOpenTask(d.task.id); },
+      onError: (e) => toast(e instanceof ApiError ? e.message : 'Ошибка', 'err'),
+    });
+  };
+
+  return (
+    <>
+      <ModalHeader title="Новая задача" onClose={onClose} />
+      <div className="flex flex-col gap-3.5 p-5">
+        {templates.length > 0 && (
+          <Field label="Из шаблона (необязательно)">
+            <Select value={f.template_id} onChange={(e) => setF({ ...f, template_id: e.target.value })}>
+              <option value="">Пустая задача</option>
+              {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+            </Select>
+          </Field>
+        )}
+        <Field label="Название"><Input autoFocus value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} onKeyDown={(e) => e.key === 'Enter' && submit()} placeholder="Что нужно сделать?" /></Field>
+        {!f.template_id && (
+          <>
+            <Field label="Описание"><Textarea value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} placeholder="Детали задачи…" /></Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Исполнитель"><AssigneeSelect value={f.assignee_id} onChange={(v) => setF({ ...f, assignee_id: v })} /></Field>
+              <Field label="Приоритет">
+                <Select value={f.priority} onChange={(e) => setF({ ...f, priority: e.target.value as typeof f.priority })}>
+                  {PRIORITIES.map((p) => <option key={p} value={p}>{PRIORITY_LABELS[p]}</option>)}
+                </Select>
+              </Field>
+              <Field label="Дедлайн"><Input type="date" value={f.due_date} onChange={(e) => setF({ ...f, due_date: e.target.value })} /></Field>
+              <Field label="Спринт"><SprintSelect value={f.sprint_id} onChange={(v) => setF({ ...f, sprint_id: v })} /></Field>
+            </div>
+            <Field label="Теги"><TagPicker value={f.tag_ids} onChange={(v) => setF({ ...f, tag_ids: v })} /></Field>
+          </>
+        )}
+        <Button onClick={submit} disabled={create.isPending || tmut.createTask.isPending || (!f.title.trim() && !f.template_id)}>
+          {create.isPending || tmut.createTask.isPending ? 'Создание…' : 'Создать задачу'}
+        </Button>
+      </div>
+    </>
+  );
+}
+
+// ---------- Редактирование ----------
+function EditForm({ taskId, onClose, onOpenTask }: { taskId: number; onClose: () => void; onOpenTask: (id: number) => void }) {
+  const { user } = useAuth();
+  const can = useCan();
+  const qc = useQueryClient();
+  const toast = useToast();
+  const { data: task } = useTask(taskId);
+  const update = useUpdateTask(taskId);
+  const del = useDeleteTask();
+  const [tab, setTab] = useState<Tab>('comments');
+  const [confirmDel, setConfirmDel] = useState(false);
+  const [title, setTitle] = useState('');
+  const [desc, setDesc] = useState('');
+
+  useEffect(() => {
+    if (task) { setTitle(task.title); setDesc(task.description); }
+  }, [task?.id]); // eslint-disable-line
+
+  if (!task) return <div className="p-10 text-center text-muted">Загрузка…</div>;
+
+  const editable = can('task.update.any') || (can('task.update.own') && task.creator_id === user?.id);
+  const patch = (d: Parameters<typeof update.mutate>[0]) =>
+    update.mutate(d, { onError: (e) => toast(e instanceof ApiError ? e.message : 'Ошибка', 'err') });
+
+  const saveTitle = () => { const t = title.trim(); if (t && t !== task.title) patch({ title: t }); };
+  const saveDesc = () => { if (desc !== task.description) patch({ description: desc }); };
+  const setRec = (freq: string | null) => tasksApi.setRecurrence(taskId, freq as never)
+    .then(() => { invalidateTasks(qc); qc.invalidateQueries({ queryKey: ['task', taskId] }); })
+    .catch((e) => toast(e instanceof ApiError ? e.message : 'Ошибка', 'err'));
+
+  const participantIds = task.members.filter((m) => m.kind === 'participant').map((m) => m.user_id);
+  const observerIds = task.members.filter((m) => m.kind === 'observer').map((m) => m.user_id);
+
+  return (
+    <>
+      <ModalHeader title={`Задача #${task.id}`} onClose={onClose}>
+        <Dropdown trigger={<button className="rounded-md p-1.5 text-muted hover:bg-hover hover:text-text"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="3" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="8" cy="13" r="1.4"/></svg></button>}>
+          {editable && (
+            <DropdownItem onClick={() => {
+              const name = prompt('Название шаблона', task.title);
+              if (name) tmutCreate(task, name);
+            }}>Сохранить как шаблон</DropdownItem>
+          )}
+          {can('task.delete') && <DropdownItem danger onClick={() => setConfirmDel(true)}>Удалить задачу</DropdownItem>}
+        </Dropdown>
+      </ModalHeader>
+
+      <div className="max-h-[72vh] overflow-y-auto p-5">
+        <div className="mb-3 flex items-center gap-2">
+          <StatusMenu taskId={task.id} status={task.status as Status} />
+          {task.recurrence && <span className="text-xs text-muted">↻ {RECURRENCE_LABELS[task.recurrence.freq]}</span>}
+          {task.parent_id && <button onClick={() => onOpenTask(task.parent_id!)} className="text-xs text-accent hover:underline">↑ родитель #{task.parent_id}</button>}
+        </div>
+
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} onBlur={saveTitle} onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLElement).blur()} disabled={!editable} className="mb-3 border-transparent text-base font-semibold hover:border-border focus:border-accent" />
+
+        <Textarea value={desc} onChange={(e) => setDesc(e.target.value)} onBlur={saveDesc} disabled={!editable} placeholder="Описание…" className="mb-4" />
+
+        <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <Field label="Исполнитель"><AssigneeSelect value={task.assignee_id} onChange={(v) => patch({ assignee_id: v })} /></Field>
+          <Field label="Приоритет">
+            <Select value={task.priority} disabled={!editable} onChange={(e) => patch({ priority: e.target.value as never })}>
+              {PRIORITIES.map((p) => <option key={p} value={p}>{PRIORITY_LABELS[p]}</option>)}
+            </Select>
+          </Field>
+          <Field label="Оценка, мин"><Input type="number" min={0} disabled={!editable} defaultValue={task.time_estimate || ''} key={'est'+task.id} onBlur={(e) => patch({ time_estimate: Number(e.target.value) || 0 })} /></Field>
+          <Field label="Начало"><Input type="date" disabled={!editable} value={task.start_date ?? ''} onChange={(e) => patch({ start_date: e.target.value || null })} /></Field>
+          <Field label="Дедлайн"><Input type="date" disabled={!editable} value={task.due_date ?? ''} onChange={(e) => patch({ due_date: e.target.value || null })} /></Field>
+          <Field label="Повтор">
+            <Select disabled={!editable} value={task.recurrence?.freq ?? ''} onChange={(e) => setRec(e.target.value || null)}>
+              <option value="">Нет</option>
+              {RECURRENCE_FREQS.map((r) => <option key={r} value={r}>{RECURRENCE_LABELS[r]}</option>)}
+            </Select>
+          </Field>
+          <Field label="Спринт"><SprintSelect value={task.sprint_id} onChange={(v) => patch({ sprint_id: v })} /></Field>
+        </div>
+
+        {editable && (
+          <div className="mb-4 grid grid-cols-2 gap-3">
+            <Field label="Соисполнители"><MemberPicker value={participantIds} onChange={(v) => patch({ participant_ids: v, observer_ids: observerIds })} /></Field>
+            <Field label="Наблюдатели"><MemberPicker value={observerIds} onChange={(v) => patch({ participant_ids: participantIds, observer_ids: v })} /></Field>
+          </div>
+        )}
+
+        {editable && <Field label="Теги" className="mb-4"><TagPicker value={task.tags.map((t) => t.id)} onChange={(v) => patch({ tag_ids: v })} /></Field>}
+
+        <Tabs tabs={TABS.map((t) => ({ ...t, count: t.id === 'comments' ? task.counts?.comments : t.id === 'files' ? task.counts?.files : t.id === 'subtasks' ? task.counts?.subtasks : undefined }))} value={tab} onChange={setTab} />
+        <div className="pt-4">
+          {tab === 'checklist' && <Checklist taskId={task.id} />}
+          {tab === 'subtasks' && <SubtaskList parentId={task.id} onOpen={onOpenTask} />}
+          {tab === 'comments' && <CommentList taskId={task.id} />}
+          {tab === 'files' && <FileList taskId={task.id} />}
+          {tab === 'time' && <TimeSection taskId={task.id} estimate={task.time_estimate} />}
+          {tab === 'history' && <HistoryFeed taskId={task.id} />}
+        </div>
+      </div>
+
+      <ConfirmDialog open={confirmDel} onClose={() => setConfirmDel(false)} title="Удалить задачу?" body="Задача и все вложения будут удалены безвозвратно."
+        onConfirm={() => { del.mutate(task.id, { onSuccess: onClose }); }} />
+    </>
+  );
+}
+
+// «Сохранить как шаблон» — через templates-модуль
+function tmutCreate(task: TaskView, name: string) {
+  templatesApi.create({
+    name, title: task.title, description: task.description, priority: task.priority, checklist: [],
+  });
+}

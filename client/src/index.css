@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+/* Дизайн-токены → утилиты Tailwind: bg-bg, bg-surface, bg-raised,
+   border-border, text-text, text-muted, bg-accent … */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-hover: var(--hover);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+:root {
+  --bg: #ffffff;
+  --surface: #f7f8fa;
+  --raised: #ffffff;
+  --hover: #f0f1f5;
+  --border: #e5e6eb;
+  --border-strong: #d0d2da;
+  --text: #17181c;
+  --muted: #62666f;
+  --faint: #9aa0ab;
+  --accent: #5e6ad2;
+  --accent-hover: #4f5bc7;
+  --accent-soft: #eceefc;
+  --danger: #dc4c4c;
+  --danger-soft: #fdecec;
+  --success: #4cb782;
+  --warning: #f2c94c;
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #0e0f13;
+  --surface: #14151b;
+  --raised: #1b1d24;
+  --hover: #23252e;
+  --border: #262830;
+  --border-strong: #35383f;
+  --text: #e8e9ec;
+  --muted: #9aa0ab;
+  --faint: #62666f;
+  --accent: #6b77e0;
+  --accent-hover: #7d88ec;
+  --accent-soft: #232743;
+  --danger: #e06b6b;
+  --danger-soft: #3a2226;
+  --success: #4cb782;
+  --warning: #f2c94c;
+  color-scheme: dark;
+}
+
+html, body, #root { height: 100%; }
+body { @apply bg-bg text-text font-sans text-sm antialiased; }
+
+/* Тонкие скроллбары как у Linear */
+* { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+
+/* Анимация появления модалок/меню */
+@keyframes pop { from { opacity: 0; transform: scale(.97) translateY(-4px); } }
+@keyframes fade { from { opacity: 0; } }
+.anim-pop { animation: pop .12s ease-out; }
+.anim-fade { animation: fade .12s ease-out; }

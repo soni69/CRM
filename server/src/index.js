@@ -1,0 +1,13 @@
+import { config } from './core/config.js';
+import { migrate } from './core/db.js';
+import { seedDemo } from './core/seed.js';
+import { startScheduler } from './core/scheduler.js';
+import { app } from './app.js';
+
+migrate();
+if (config.seedDemo) seedDemo();
+startScheduler();
+
+app.listen(config.port, () => {
+  console.log(`[server] http://localhost:${config.port}`);
+});

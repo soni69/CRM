@@ -1,0 +1,38 @@
+// Пути эндпоинтов — единственное место, где они перечислены.
+export const API = {
+  auth: {
+    register: '/api/auth/register',
+    login: '/api/auth/login',
+    logout: '/api/auth/logout',
+    me: '/api/auth/me',
+  },
+  tasks: {
+    list: '/api/tasks',
+    one: (id: number) => `/api/tasks/${id}`,
+    status: (id: number) => `/api/tasks/${id}/status`,
+    bulk: '/api/tasks/bulk',
+    tags: (id: number) => `/api/tasks/${id}/tags`,
+    members: (id: number) => `/api/tasks/${id}/members`,
+    checklist: (id: number) => `/api/tasks/${id}/checklist`,
+    comments: (id: number) => `/api/tasks/${id}/comments`,
+    files: (id: number) => `/api/tasks/${id}/files`,
+    history: (id: number) => `/api/tasks/${id}/history`,
+    time: (id: number) => `/api/tasks/${id}/time`,
+    recurrence: (id: number) => `/api/tasks/${id}/recurrence`,
+    exportCsv: '/api/tasks/export.csv',
+    import: '/api/tasks/import',
+  },
+  checklist: { one: (id: number) => `/api/checklist/${id}` },
+  comments: { one: (id: number) => `/api/comments/${id}` },
+  files: { download: (id: number) => `/api/files/${id}/download`, one: (id: number) => `/api/files/${id}` },
+  tags: { list: '/api/tags', one: (id: number) => `/api/tags/${id}` },
+  sprints: { list: '/api/sprints', one: (id: number) => `/api/sprints/${id}` },
+  templates: {
+    list: '/api/templates',
+    one: (id: number) => `/api/templates/${id}`,
+    createTask: (id: number) => `/api/tasks/from-template/${id}`,
+  },
+  reports: { overview: '/api/reports/overview' },
+  search: { tasks: '/api/search/tasks' },
+  users: { list: '/api/users', role: (id: number) => `/api/users/${id}/role`, one: (id: number) => `/api/users/${id}` },
+} as const;

@@ -16,3 +16,24 @@ export function useCreateTag() {
     onError: (e) => toast(e instanceof ApiError ? e.message : 'Ошибка', 'err'),
   });
 }
+
+export function useTagMutations() {
+  const qc = useQueryClient();
+  const toast = useToast();
+  const inv = () => {
+    qc.invalidateQueries({ queryKey: ['tags'] });
+    qc.invalidateQueries({ queryKey: ['tasks'] });
+    qc.invalidateQueries({ queryKey: ['task'] });
+  };
+  const onErr = (e: unknown) => toast(e instanceof ApiError ? e.message : 'Ошибка', 'err');
+  return {
+    update: useMutation({
+      mutationFn: ({ id, ...d }: { id: number } & Parameters<typeof tagsApi.update>[1]) => tagsApi.update(id, d),
+      onSuccess: inv, onError: onErr,
+    }),
+    remove: useMutation({
+      mutationFn: (id: number) => tagsApi.remove(id),
+      onSuccess: () => { toast('Тег удалён'); inv(); }, onError: onErr,
+    }),
+  };
+}

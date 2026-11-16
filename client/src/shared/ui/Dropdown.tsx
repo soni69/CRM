@@ -17,11 +17,11 @@ export function Dropdown({ trigger, children, align = 'left', className }: {
   }, [open]);
   return (
     <div ref={ref} className={cn('relative inline-block', className)}>
-      <div onClick={() => setOpen((o) => !o)}>{trigger}</div>
+      <div onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}>{trigger}</div>
       {open && (
         <div
           className={cn('anim-pop absolute top-full z-40 mt-1 min-w-40 rounded-lg border border-border bg-raised p-1 shadow-xl', align === 'right' ? 'right-0' : 'left-0')}
-          onClick={() => setOpen(false)}
+          onClick={(e) => { e.stopPropagation(); setOpen(false); }}
         >
           {children}
         </div>

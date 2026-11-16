@@ -143,10 +143,10 @@ export function Layout() {
       <div className="flex min-w-0 flex-1 flex-col">
         <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden"><Outlet /></main>
         {/* Мобильная навигация */}
-        <nav className="flex shrink-0 items-center justify-around border-t border-border bg-raised py-1 sm:hidden">
+        <nav className="flex shrink-0 items-center gap-1 overflow-x-auto border-t border-border bg-raised px-1 py-1 sm:hidden">
           {items.map((n) => (
             <NavLink key={n.to} to={n.to} end={n.end === undefined ? false : n.end}
-              className={({ isActive }) => cn('flex flex-col items-center gap-0.5 rounded-lg px-2 py-1 text-[10px] font-medium', isActive ? 'text-accent' : 'text-muted')}>
+              className={({ isActive }) => cn('flex shrink-0 flex-col items-center gap-0.5 rounded-lg px-2.5 py-1 text-[10px] font-medium whitespace-nowrap', isActive ? 'text-accent' : 'text-muted')}>
               <span>{n.icon}</span>
               {n.label}
             </NavLink>

@@ -167,10 +167,10 @@ export function GanttPage() {
           <button onClick={() => setZoom(1)} className="w-11 text-center font-mono text-[11px] text-muted" title="Сбросить масштаб">{Math.round(zoom * 100)}%</button>
           <button onClick={() => setZoom((z) => Math.min(4, +(z + 0.2).toFixed(1)))} className="rounded-md px-2 py-1 text-xs font-medium text-muted hover:bg-hover">+</button>
         </div>
-        <div className="flex items-center gap-1 rounded-lg border border-border p-0.5">
+        <div className="flex max-w-full items-center gap-1 overflow-x-auto rounded-lg border border-border p-0.5">
           {RANGES.map((r) => (
             <button key={r.id} onClick={() => setRangeId(r.id)}
-              className={cn('rounded-md px-2.5 py-1 text-xs font-medium', rangeId === r.id ? 'bg-hover text-text' : 'text-muted hover:text-text')}>
+              className={cn('shrink-0 whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium', rangeId === r.id ? 'bg-hover text-text' : 'text-muted hover:text-text')}>
               {r.label}
             </button>
           ))}

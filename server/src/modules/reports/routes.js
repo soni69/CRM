@@ -44,6 +44,7 @@ reportsRouter.get('/api/reports/overview', asyncH(async (req, res) => {
 
   const totals = q.get(`
     SELECT COUNT(*) AS total,
+      SUM(status NOT IN (SELECT key FROM board_columns WHERE is_done = 1)) AS in_progress,
       SUM(status IN (SELECT key FROM board_columns WHERE is_done = 1)) AS done,
       SUM(due_date IS NOT NULL AND due_date < date('now') AND status NOT IN (SELECT key FROM board_columns WHERE is_done = 1)) AS overdue
     FROM tasks t WHERE ${vis.sql} AND ${mineSql}`, ...vis.params, ...mineArgs);

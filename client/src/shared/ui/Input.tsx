@@ -15,9 +15,18 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<H
   },
 );
 
+const chevron = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238d94a8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`;
+
 export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement>>(
-  function Select({ className, ...props }, ref) {
-    return <select ref={ref} className={cn(fieldClass, 'h-9 cursor-pointer', className)} {...props} />;
+  function Select({ className, style, ...props }, ref) {
+    return (
+      <select
+        ref={ref}
+        className={cn(fieldClass, 'h-9 cursor-pointer appearance-none bg-no-repeat pr-8', className)}
+        style={{ backgroundImage: chevron, backgroundPosition: 'right 10px center', ...style }}
+        {...props}
+      />
+    );
   },
 );
 

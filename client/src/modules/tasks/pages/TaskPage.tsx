@@ -165,7 +165,7 @@ export function TaskPage() {
 
   return (
     <div className="mx-auto max-w-6xl p-4 sm:p-6">
-      <div className="mb-4 flex items-center gap-3">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         <BackLink />
         <StatusMenu taskId={task.id} status={task.status as Status} />
         {task.recurrence && <span className="text-xs text-muted">↻ {RECURRENCE_LABELS[task.recurrence.freq]}</span>}

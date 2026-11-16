@@ -14,6 +14,8 @@ export const config = {
   uploadsDir: path.resolve(root, process.env.UPLOADS_DIR || './uploads'),
   maxUploadMb: Number(process.env.MAX_UPLOAD_MB || 10),
   isProd: process.env.NODE_ENV === 'production',
+  // Secure-кука: по умолчанию в проде вкл; выключить при работе по http:// (COOKIE_SECURE=false)
+  cookieSecure: process.env.COOKIE_SECURE ? process.env.COOKIE_SECURE === 'true' : process.env.NODE_ENV === 'production',
   // Уведомления наружу (необязательно — без env каналы просто выключены)
   telegramBotToken: process.env.TELEGRAM_BOT_TOKEN || '',
   smtpHost: process.env.SMTP_HOST || '',

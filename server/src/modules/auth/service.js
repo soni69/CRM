@@ -14,7 +14,7 @@ export function createSession(res, userId) {
   res.cookie(COOKIE, token, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: config.isProd,
+    secure: config.cookieSecure,
     maxAge: TTL_DAYS * 864e5,
     path: '/',
   });

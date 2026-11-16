@@ -25,7 +25,7 @@ export function TaskCard({ task, onOpen, selected, onSelect }: {
   return (
     <div
       className={cn(
-        'group relative cursor-pointer rounded-lg border bg-raised p-3 transition-colors',
+        'group relative cursor-pointer rounded-lg border bg-raised p-3 shadow-soft transition-all hover:shadow-md',
         selected ? 'border-accent shadow-[0_0_0_1px_var(--accent)]' : 'border-border hover:border-border-strong',
       )}
       onClick={() => onOpen(task.id)}

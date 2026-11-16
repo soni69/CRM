@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* Дизайн-токены → утилиты Tailwind: bg-bg, bg-surface, bg-raised,
-   border-border, text-text, text-muted, bg-accent … */
+   border-border, text-text, text-muted, bg-accent, shadow-soft … */
 @theme inline {
   --color-bg: var(--bg);
   --color-surface: var(--surface);
@@ -19,58 +19,77 @@
   --color-danger-soft: var(--danger-soft);
   --color-success: var(--success);
   --color-warning: var(--warning);
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --shadow-soft: var(--shadow-soft-v);
+  --font-sans: "Onest", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  /* Мягче стандартных: округлость «студийной мебели» */
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.875rem;
 }
 
 :root {
-  --bg: #ffffff;
-  --surface: #f3f4f8;
-  --raised: #ffffff;
-  --hover: #eceef3;
-  --border: #d9dce4;
-  --border-strong: #c3c7d2;
-  --text: #17181c;
-  --muted: #5a5e6a;
-  --faint: #848a97;
-  --accent: #5e6ad2;
-  --accent-hover: #4f5bc7;
-  --accent-soft: #eceefc;
-  --danger: #dc4c4c;
-  --danger-soft: #fdecec;
-  --success: #4cb782;
-  --warning: #f2c94c;
+  --bg: #f6f4f0;
+  --surface: #efece6;
+  --raised: #fdfcfa;
+  --hover: #eae6de;
+  --border: #e2ddd3;
+  --border-strong: #cfc8ba;
+  --text: #1f1c18;
+  --muted: #6e675c;
+  --faint: #9a9184;
+  --accent: #3f7a5c;
+  --accent-hover: #356850;
+  --accent-soft: #e3ede6;
+  --danger: #c24a3d;
+  --danger-soft: #f9e9e6;
+  --success: #4d9068;
+  --warning: #d9a441;
+  --shadow-soft-v: 0 1px 2px rgb(28 24 18 / .04), 0 6px 20px -8px rgb(28 24 18 / .10);
   color-scheme: light;
 }
 
 .dark {
-  --bg: #0e0f13;
-  --surface: #14151b;
-  --raised: #1b1d24;
-  --hover: #23252e;
-  --border: #262830;
-  --border-strong: #35383f;
-  --text: #e8e9ec;
-  --muted: #9aa0ab;
-  --faint: #62666f;
-  --accent: #6b77e0;
-  --accent-hover: #7d88ec;
-  --accent-soft: #232743;
-  --danger: #e06b6b;
-  --danger-soft: #3a2226;
-  --success: #4cb782;
-  --warning: #f2c94c;
+  --bg: #171512;
+  --surface: #1e1b17;
+  --raised: #26221d;
+  --hover: #2e2a24;
+  --border: #35302a;
+  --border-strong: #474036;
+  --text: #ece7dd;
+  --muted: #a39a8b;
+  --faint: #6f675c;
+  --accent: #7cb596;
+  --accent-hover: #8fc4a6;
+  --accent-soft: #28382f;
+  --danger: #d97a6b;
+  --danger-soft: #3c2420;
+  --success: #7cb596;
+  --warning: #d9a441;
+  --shadow-soft-v: 0 1px 2px rgb(0 0 0 / .3), 0 8px 24px -8px rgb(0 0 0 / .45);
   color-scheme: dark;
 }
 
 html, body, #root { height: 100%; }
 body { @apply bg-bg text-text font-sans text-sm antialiased; }
+h1, h2, h3 { letter-spacing: -0.015em; }
 
-/* Тонкие скроллбары как у Linear */
+/* Браузерные поверхности — тоже дизайн */
+::selection { background: var(--accent-soft); color: var(--text); }
+input, textarea { caret-color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 4px; }
+
+/* Тонкие тёплые скроллбары */
 * { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
 
 /* Анимация появления модалок/меню */
 @keyframes pop { from { opacity: 0; transform: scale(.97) translateY(-4px); } }
 @keyframes fade { from { opacity: 0; } }
 .anim-pop { animation: pop .12s ease-out; }
 .anim-fade { animation: fade .12s ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-pop, .anim-fade { animation: none; }
+}

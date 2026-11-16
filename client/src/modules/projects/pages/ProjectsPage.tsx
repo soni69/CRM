@@ -46,12 +46,14 @@ export function ProjectsPage() {
             <div
               key={p.id}
               onClick={() => nav(`/projects/${p.id}`)}
-              className="flex cursor-pointer flex-col gap-3 rounded-xl border border-border border-l-4 bg-raised p-4 transition-colors hover:border-border-strong"
-              style={{ borderLeftColor: p.color }}
-            >
+              className="flex cursor-pointer flex-col gap-3 rounded-xl border border-border bg-raised p-4 shadow-soft transition-all hover:shadow-md"
+              >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="truncate font-semibold">{p.name}</p>
+                  <p className="flex items-center gap-2 truncate font-semibold">
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: p.color }} />
+                    {p.name}
+                  </p>
                   {p.description && <p className="mt-0.5 line-clamp-2 text-xs text-muted">{p.description}</p>}
                 </div>
                 {canManage(p) && (

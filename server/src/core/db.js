@@ -116,6 +116,7 @@ CREATE TABLE IF NOT EXISTS projects (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
   name        TEXT NOT NULL,
   description TEXT NOT NULL DEFAULT '',
+  goal        TEXT NOT NULL DEFAULT '',
   color       TEXT NOT NULL DEFAULT '#5e6ad2',
   lead_id     INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at  TEXT NOT NULL DEFAULT (datetime('now'))
@@ -124,6 +125,15 @@ CREATE TABLE IF NOT EXISTS project_members (
   project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   PRIMARY KEY (project_id, user_id)
+);
+CREATE TABLE IF NOT EXISTS project_stages (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  title      TEXT NOT NULL,
+  owner_id   INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  due_date   TEXT,
+  done       INTEGER NOT NULL DEFAULT 0,
+  position   INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS board_columns (
   id       INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -160,6 +170,8 @@ export function migrate() {
   let taskCols = db.prepare('PRAGMA table_info(tasks)').all().map((c) => c.name);
   if (!taskCols.includes('due_time')) db.exec('ALTER TABLE tasks ADD COLUMN due_time TEXT');
   if (!taskCols.includes('project_id')) db.exec('ALTER TABLE tasks ADD COLUMN project_id INTEGER REFERENCES projects(id) ON DELETE SET NULL');
+  const projCols = db.prepare('PRAGMA table_info(projects)').all().map((c) => c.name);
+  if (!projCols.includes('goal')) db.exec("ALTER TABLE projects ADD COLUMN goal TEXT NOT NULL DEFAULT ''");
 
   // Новые роли: member→manager, manager→lead (через временную метку)
   const usersSql = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='users'").get()?.sql ?? '';

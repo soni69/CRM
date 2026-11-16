@@ -8,6 +8,7 @@ import { useColumns } from '../../columns';
 import { TaskRow } from '../../tasks/components/TaskRow';
 import { Avatar, Button, ConfirmDialog, PageSpinner, EmptyState } from '../../../shared/ui';
 import { ProjectModal } from '../components/ProjectModal';
+import { ProjectStages } from '../components/ProjectStages';
 import type { TaskView } from '@crm/contracts';
 
 export function ProjectPage() {
@@ -67,6 +68,12 @@ export function ProjectPage() {
           <div className="min-w-0">
             <h1 className="text-xl font-semibold">{project.name}</h1>
             {project.description && <p className="mt-1 text-sm text-muted">{project.description}</p>}
+            {project.goal && (
+              <p className="mt-3 rounded-lg border border-border/70 bg-surface px-3 py-2 text-sm">
+                <span className="mr-1.5 text-xs font-semibold uppercase tracking-wide" style={{ color: project.color }}>Цель</span>
+                {project.goal}
+              </p>
+            )}
           </div>
           {canManage && (
             <div className="flex shrink-0 gap-2">
@@ -98,6 +105,8 @@ export function ProjectPage() {
           <Button size="sm" onClick={() => nav(`/tasks/new?project=${project.id}`)}>+ Задача в проект</Button>
         </div>
       </div>
+
+      <ProjectStages project={project} canManage={canManage} />
 
       {projectTasks.length === 0 ? (
         <EmptyState title="В проекте пока нет задач" hint="Создайте первую — она будет видна только участникам проекта." />

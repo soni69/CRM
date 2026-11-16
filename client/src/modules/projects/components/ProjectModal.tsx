@@ -14,6 +14,7 @@ export function ProjectModal({ project, onClose }: { project?: ProjectView; onCl
   const [form, setForm] = useState<CreateProjectInput>({
     name: project?.name ?? '',
     description: project?.description ?? '',
+    goal: project?.goal ?? '',
     color: project?.color ?? PALETTE[0],
     lead_id: project?.lead_id ?? null,
     member_ids: project?.member_ids ?? [],
@@ -50,6 +51,15 @@ export function ProjectModal({ project, onClose }: { project?: ProjectView; onCl
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             rows={2}
+            className="w-full rounded-md border border-border bg-raised px-2.5 py-1.5 text-sm outline-none focus:border-accent"
+          />
+        </Field>
+        <Field label="Цель проекта">
+          <textarea
+            value={form.goal}
+            onChange={(e) => setForm({ ...form, goal: e.target.value })}
+            rows={2}
+            placeholder="Чего хотим достичь этим проектом?"
             className="w-full rounded-md border border-border bg-raised px-2.5 py-1.5 text-sm outline-none focus:border-accent"
           />
         </Field>

@@ -33,5 +33,17 @@ export function useProjectMutations() {
       mutationFn: (id: number) => projectsApi.remove(id),
       onSuccess: () => { toast('Проект удалён'); inv(); }, onError: onErr,
     }),
+    addStage: useMutation({
+      mutationFn: ({ id, ...d }: { id: number } & Parameters<typeof projectsApi.addStage>[1]) => projectsApi.addStage(id, d),
+      onSuccess: inv, onError: onErr,
+    }),
+    updateStage: useMutation({
+      mutationFn: ({ id, sid, ...d }: { id: number; sid: number } & Parameters<typeof projectsApi.updateStage>[2]) => projectsApi.updateStage(id, sid, d),
+      onSuccess: inv, onError: onErr,
+    }),
+    removeStage: useMutation({
+      mutationFn: ({ id, sid }: { id: number; sid: number }) => projectsApi.removeStage(id, sid),
+      onSuccess: inv, onError: onErr,
+    }),
   };
 }

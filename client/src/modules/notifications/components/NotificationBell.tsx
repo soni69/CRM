@@ -21,6 +21,7 @@ export function NotificationBell({ collapsed }: { collapsed: boolean }) {
   return (
     <Dropdown
       align="left"
+      up
       className="w-full"
       trigger={
         <button

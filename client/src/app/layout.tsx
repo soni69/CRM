@@ -120,6 +120,7 @@ export function Layout() {
           <ThemeButton collapsed={collapsed} />
           <Dropdown
             align="left"
+            up
             trigger={
               <button className={cn('flex w-full items-center rounded-lg py-2 text-left transition-colors hover:bg-hover', collapsed ? 'justify-center px-0' : 'gap-2.5 px-2.5')} title={collapsed ? user.name : undefined}>
                 <Avatar name={user.name} id={user.id} size={24} />

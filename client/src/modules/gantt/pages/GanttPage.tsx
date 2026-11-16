@@ -36,6 +36,7 @@ export function GanttPage() {
   const [assignee, setAssignee] = useState('');
   const [status, setStatus] = useState('');
   const [rangeId, setRangeId] = useState<RangeId>('all');
+  const [zoom, setZoom] = useState(1);
   const range = RANGES.find((r) => r.id === rangeId)!;
 
   const filtered = useMemo(() => tasks.filter((t) =>
@@ -67,10 +68,10 @@ export function GanttPage() {
     }
     const rows = range.id === 'all' ? dated : dated.filter((r) => r.toMs > ws && r.fromMs < we);
     const hourly = we - ws <= 2 * 864e5;
-    const PX = hourly ? HOUR_PX : DAY_PX;
+    const PX = (hourly ? HOUR_PX : DAY_PX) * zoom;
     const tickMs = hourly ? 36e5 : 864e5;
     return { rows, winStart: ws, W: Math.ceil((we - ws) / tickMs) * PX, PX, tickMs };
-  }, [filtered, range]);
+  }, [filtered, range, zoom]);
 
   if (isLoading) return <PageSpinner />;
 
@@ -94,7 +95,12 @@ export function GanttPage() {
           <option value="">Все статусы</option>
           {columns.map((c) => <option key={c.key} value={c.key}>{c.name}</option>)}
         </Select>
-        <div className="ml-auto flex items-center gap-1 rounded-lg border border-border p-0.5">
+        <div className="ml-auto flex items-center gap-1 rounded-lg border border-border p-0.5" title="Масштаб шкалы">
+          <button onClick={() => setZoom((z) => Math.max(0.4, +(z - 0.2).toFixed(1)))} className="rounded-md px-2 py-1 text-xs font-medium text-muted hover:bg-hover">−</button>
+          <button onClick={() => setZoom(1)} className="w-11 text-center font-mono text-[11px] text-muted" title="Сбросить масштаб">{Math.round(zoom * 100)}%</button>
+          <button onClick={() => setZoom((z) => Math.min(4, +(z + 0.2).toFixed(1)))} className="rounded-md px-2 py-1 text-xs font-medium text-muted hover:bg-hover">+</button>
+        </div>
+        <div className="flex items-center gap-1 rounded-lg border border-border p-0.5">
           {RANGES.map((r) => (
             <button key={r.id} onClick={() => setRangeId(r.id)}
               className={cn('rounded-md px-2.5 py-1 text-xs font-medium', rangeId === r.id ? 'bg-hover text-text' : 'text-muted hover:text-text')}>
@@ -153,9 +159,18 @@ export function GanttPage() {
                   </div>
                 );
               })}
-              {/* Вертикальные линии + сейчас */}
+              {/* Сетка: каждый тик + выходные, линия «сейчас» */}
               <div className="pointer-events-none absolute inset-y-0" style={{ left: LABEL_W, width: W, height: H }}>
-                {ticks.map((t, i) => (i % (hourly ? 4 : 7) === 0 ? <div key={t} className="absolute inset-y-0 border-l border-border/40" style={{ left: i * PX }} /> : null))}
+                {ticks.map((t, i) => {
+                  const d = new Date(t);
+                  const weekend = !hourly && (d.getDay() === 0 || d.getDay() === 6);
+                  return (
+                    <div key={t}>
+                      {weekend && <div className="absolute inset-y-0 bg-hover/50" style={{ left: i * PX, width: PX }} />}
+                      <div className={cn('absolute inset-y-0 border-l', i % (hourly ? 4 : 7) === 0 ? 'border-border' : 'border-border/40')} style={{ left: i * PX }} />
+                    </div>
+                  );
+                })}
                 {nowX >= 0 && nowX <= W && <div className="absolute inset-y-0 w-px bg-danger" style={{ left: nowX }} />}
               </div>
             </div>

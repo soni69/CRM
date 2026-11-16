@@ -1,15 +1,19 @@
 import { useState } from 'react';
 import { useUsers } from '../hooks';
+import { useProjects } from '../../projects/hooks';
 import { cn } from '../../../shared/utils/cn';
 import { Avatar, Input } from '../../../shared/ui';
 
 // Мультивыбор пользователей — для соисполнителей и наблюдателей
-export function MemberPicker({ value, onChange, exclude = [] }: {
-  value: number[]; onChange: (ids: number[]) => void; exclude?: number[];
+export function MemberPicker({ value, onChange, exclude = [], projectId }: {
+  value: number[]; onChange: (ids: number[]) => void; exclude?: number[]; projectId?: number | null;
 }) {
-  const { data: users = [] } = useUsers();
+  const { data: all = [] } = useUsers();
+  const { data: projects = [] } = useProjects();
   const [q, setQ] = useState('');
   const needle = q.trim().toLowerCase();
+  const memberIds = projectId ? new Set(projects.find((p) => p.id === projectId)?.member_ids ?? []) : null;
+  const users = memberIds ? all.filter((u) => memberIds.has(u.id)) : all;
   const list = users.filter((u) =>
     !exclude.includes(u.id) &&
     (!needle || u.name.toLowerCase().includes(needle) || u.email.toLowerCase().includes(needle)),

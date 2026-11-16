@@ -17,5 +17,7 @@ export const PERMISSIONS = [
   'user.manage',
   'report.team',          // отчёты по команде (иначе — только по себе)
   'transfer.all',         // экспорт чужих задач (иначе — только своих)
+  'project.manage',       // создавать/вести проекты (тимлид и админ)
+  'board.manage',         // колонки, теги, спринты
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];

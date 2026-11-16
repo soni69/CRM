@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS users (
   name          TEXT NOT NULL,
   email         TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
-  role          TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('admin','manager','member')),
+  role          TEXT NOT NULL DEFAULT 'manager' CHECK (role IN ('admin','lead','manager')),
   created_at    TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE TABLE IF NOT EXISTS sessions (
@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   creator_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   parent_id     INTEGER REFERENCES tasks(id) ON DELETE CASCADE,
   sprint_id     INTEGER REFERENCES sprints(id) ON DELETE SET NULL,
+  project_id    INTEGER REFERENCES projects(id) ON DELETE SET NULL,
   time_estimate INTEGER NOT NULL DEFAULT 0,
   recurrence    TEXT,
   created_at    TEXT NOT NULL DEFAULT (datetime('now')),
@@ -111,6 +112,19 @@ CREATE TABLE IF NOT EXISTS time_entries (
   comment    TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+CREATE TABLE IF NOT EXISTS projects (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  name        TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  color       TEXT NOT NULL DEFAULT '#5e6ad2',
+  lead_id     INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS project_members (
+  project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  PRIMARY KEY (project_id, user_id)
+);
 CREATE TABLE IF NOT EXISTS board_columns (
   id       INTEGER PRIMARY KEY AUTOINCREMENT,
   key      TEXT NOT NULL UNIQUE,
@@ -143,8 +157,34 @@ CREATE INDEX IF NOT EXISTS idx_sessions_user   ON sessions(user_id);
 
 export function migrate() {
   db.exec(SCHEMA);
-  const taskCols = db.prepare('PRAGMA table_info(tasks)').all().map((c) => c.name);
+  let taskCols = db.prepare('PRAGMA table_info(tasks)').all().map((c) => c.name);
   if (!taskCols.includes('due_time')) db.exec('ALTER TABLE tasks ADD COLUMN due_time TEXT');
+  if (!taskCols.includes('project_id')) db.exec('ALTER TABLE tasks ADD COLUMN project_id INTEGER REFERENCES projects(id) ON DELETE SET NULL');
+
+  // Новые роли: member→manager, manager→lead (через временную метку)
+  const usersSql = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='users'").get()?.sql ?? '';
+  if (usersSql.includes("'member'")) {
+    db.exec('DROP TABLE IF EXISTS users_new');
+    db.exec(`CREATE TABLE users_new (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      name          TEXT NOT NULL,
+      email         TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      role          TEXT NOT NULL DEFAULT 'manager' CHECK (role IN ('admin','lead','manager')),
+      phone         TEXT,
+      telegram      TEXT,
+      created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+    )`);
+    const ucols = db.prepare('PRAGMA table_info(users)').all().map((c) => c.name);
+    const keep = ['id','name','email','password_hash','role','phone','telegram','created_at'].filter((c) => ucols.includes(c));
+    // ремап ролей прямо в SELECT (member→manager, manager→lead)
+    const sel = keep.map((c) => c === 'role'
+      ? `CASE role WHEN 'manager' THEN 'lead' WHEN 'member' THEN 'manager' ELSE role END`
+      : c).join(',');
+    db.exec(`INSERT INTO users_new (${keep.join(',')}) SELECT ${sel} FROM users`);
+    db.exec('DROP TABLE users');
+    db.exec('ALTER TABLE users_new RENAME TO users');
+  }
 
   // Колонки доски по умолчанию
   if (!db.prepare('SELECT COUNT(*) c FROM board_columns').get().c) {
@@ -181,12 +221,14 @@ export function migrate() {
         creator_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         parent_id     INTEGER REFERENCES tasks(id) ON DELETE CASCADE,
         sprint_id     INTEGER REFERENCES sprints(id) ON DELETE SET NULL,
+        project_id    INTEGER REFERENCES projects(id) ON DELETE SET NULL,
+  project_id    INTEGER REFERENCES projects(id) ON DELETE SET NULL,
         time_estimate INTEGER NOT NULL DEFAULT 0,
         recurrence    TEXT,
         created_at    TEXT NOT NULL DEFAULT (datetime('now')),
         updated_at    TEXT NOT NULL DEFAULT (datetime('now'))
       )`);
-      const keep = ['id','title','description','status','priority','start_date','due_date','due_time','assignee_id','creator_id','parent_id','sprint_id','time_estimate','recurrence','created_at','updated_at']
+      const keep = ['id','title','description','status','priority','start_date','due_date','due_time','assignee_id','creator_id','parent_id','sprint_id','project_id','time_estimate','recurrence','created_at','updated_at']
         .filter((c) => cols.includes(c));
       db.exec(`INSERT INTO tasks_new (${keep.join(',')}) SELECT ${keep.join(',')} FROM tasks`);
       db.exec('DROP TABLE tasks');

@@ -8,5 +8,7 @@ export {
   canAssign,
   canDeleteTask,
   canInteract,
+  isProjectLead,
+  isProjectMember,
   visibleTasksWhere,
 } from './guard.js';

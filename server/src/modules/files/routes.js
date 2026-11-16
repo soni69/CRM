@@ -50,8 +50,8 @@ filesRouter.get('/api/files/:id/download', asyncH(async (req, res) => {
 filesRouter.delete('/api/files/:id', asyncH(async (req, res) => {
   const f = getFile(Number(req.params.id));
   if (!f) throw httpError(404, 'Файл не найден');
-  mustSeeTask(req.user, f.task_id);
-  if (f.uploader_id !== req.user.id && !canDeleteTask(req.user)) {
+  const task = mustSeeTask(req.user, f.task_id);
+  if (f.uploader_id !== req.user.id && !canDeleteTask(req.user, task)) {
     throw httpError(403, 'Можно удалять только свои файлы');
   }
   fs.unlink(path.join(config.uploadsDir, f.filename), () => {});

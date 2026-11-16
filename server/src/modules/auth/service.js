@@ -30,7 +30,7 @@ export function findUserByEmail(email) {
   return q.get('SELECT * FROM users WHERE email = ?', email);
 }
 
-export function createUser({ name, email, password, role = 'member' }) {
+export function createUser({ name, email, password, role = 'manager' }) {
   const hash = bcrypt.hashSync(password, 10);
   const { lastInsertRowid } = q.run(
     'INSERT INTO users (name, email, password_hash, role) VALUES (?,?,?,?)', name, email, hash, role,

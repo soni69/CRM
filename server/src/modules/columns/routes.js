@@ -5,7 +5,7 @@ import { requirePermission } from '../roles/index.js';
 import { listColumns, createColumn, updateColumn, reorderColumns, deleteColumn } from './repo.js';
 
 export const columnsRouter = Router();
-const manage = requirePermission('task.update.any');
+const manage = requirePermission('board.manage');
 
 columnsRouter.get('/api/columns', (_req, res) => {
   res.json({ columns: listColumns() });

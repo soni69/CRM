@@ -39,8 +39,8 @@ commentsRouter.post('/api/tasks/:id/comments', asyncH(async (req, res) => {
 commentsRouter.delete('/api/comments/:id', asyncH(async (req, res) => {
   const c = getComment(Number(req.params.id));
   if (!c) throw httpError(404, 'Комментарий не найден');
-  mustSeeTask(req.user, c.task_id);
-  if (c.author_id !== req.user.id && !canDeleteTask(req.user)) {
+  const task = mustSeeTask(req.user, c.task_id);
+  if (c.author_id !== req.user.id && !canDeleteTask(req.user, task)) {
     throw httpError(403, 'Можно удалять только свои комментарии');
   }
   q.run('DELETE FROM task_comments WHERE id = ?', c.id);

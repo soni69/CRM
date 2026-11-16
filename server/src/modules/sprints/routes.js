@@ -29,7 +29,7 @@ sprintsRouter.post('/api/sprints', asyncH(async (req, res) => {
   res.status(201).json({ sprint: getSprint(Number(lastInsertRowid)) });
 }));
 
-sprintsRouter.patch('/api/sprints/:id', requirePermission('task.update.any'), asyncH(async (req, res) => {
+sprintsRouter.patch('/api/sprints/:id', requirePermission('board.manage'), asyncH(async (req, res) => {
   const s = getSprint(Number(req.params.id));
   if (!s) throw httpError(404, 'Спринт не найден');
   const data = parseBody(updateSprintSchema, req.body);
@@ -42,7 +42,7 @@ sprintsRouter.patch('/api/sprints/:id', requirePermission('task.update.any'), as
   res.json({ sprint: getSprint(s.id) });
 }));
 
-sprintsRouter.delete('/api/sprints/:id', requirePermission('task.update.any'), asyncH(async (req, res) => {
+sprintsRouter.delete('/api/sprints/:id', requirePermission('board.manage'), asyncH(async (req, res) => {
   const s = getSprint(Number(req.params.id));
   if (!s) throw httpError(404, 'Спринт не найден');
   q.run('DELETE FROM sprints WHERE id = ?', s.id);

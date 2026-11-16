@@ -1,6 +1,7 @@
 // Матрица прав — единственное место, где она определена на сервере.
 // Зеркало для UI: client/src/modules/roles/permissions.ts
-const MEMBER = [
+// manager — исполнитель в проектах; lead — тимлид проекта; admin — владелец всего.
+const MANAGER = [
   'task.create',
   'task.status.own',
   'task.update.own',
@@ -9,19 +10,24 @@ const MEMBER = [
   'task.files',
   'task.time',
 ];
-const MANAGER = [
-  ...MEMBER,
+const LEAD = [
+  ...MANAGER,
+  'project.manage',   // создавать проекты, управлять своими проектами (участники, задачи)
+  'board.manage',     // колонки канбана, теги, спринты
+  'report.team',
+  'transfer.all',
+];
+const ADMIN = [
+  ...LEAD,
+  'user.manage',
   'task.view.all',
   'task.status.any',
   'task.update.any',
   'task.assign.any',
   'task.delete',
-  'report.team',
-  'transfer.all',
 ];
-const ADMIN = [...MANAGER, 'user.manage'];
 
-export const PERM_MATRIX = { member: MEMBER, manager: MANAGER, admin: ADMIN };
+export const PERM_MATRIX = { manager: MANAGER, lead: LEAD, admin: ADMIN };
 
 export function can(user, permission) {
   return PERM_MATRIX[user.role]?.includes(permission) ?? false;

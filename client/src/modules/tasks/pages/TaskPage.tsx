@@ -13,6 +13,7 @@ import { tasksApi } from '../api';
 import { useCan } from '../../../modules/roles';
 import { useAuth } from '../../../modules/auth';
 import { AssigneeSelect, MemberPicker } from '../../../modules/users';
+import { ProjectSelect } from '../../../modules/projects';
 import { TagPicker } from '../../../modules/tags';
 import { SprintSelect } from '../../../modules/sprints/components/SprintSelect';
 import { Checklist } from '../../../modules/checklists';
@@ -53,7 +54,7 @@ export function NewTaskPage() {
   const create = useCreateTask();
   const { data: templates = [] } = useTemplates();
   const tmut = useTemplateMutations();
-  const [f, setF] = useState({ title: '', description: '', priority: 'medium' as const, assignee_id: null as number | null, due_date: '', due_time: null as string | null, sprint_id: null as number | null, tag_ids: [] as number[], template_id: '', participant_ids: [] as number[], observer_ids: [] as number[] });
+  const [f, setF] = useState({ title: '', description: '', priority: 'medium' as const, assignee_id: null as number | null, due_date: '', due_time: null as string | null, sprint_id: null as number | null, project_id: null as number | null, tag_ids: [] as number[], template_id: '', participant_ids: [] as number[], observer_ids: [] as number[] });
 
   const submit = () => {
     if (!f.title.trim() && !f.template_id) return;
@@ -65,7 +66,7 @@ export function NewTaskPage() {
     }
     create.mutate({
       title: f.title, description: f.description, priority: f.priority,
-      assignee_id: f.assignee_id, due_date: f.due_date || null, due_time: f.due_time, sprint_id: f.sprint_id,
+      assignee_id: f.assignee_id, due_date: f.due_date || null, due_time: f.due_time, sprint_id: f.sprint_id, project_id: f.project_id,
       tag_ids: f.tag_ids, time_estimate: 0, participant_ids: f.participant_ids, observer_ids: f.observer_ids,
     }, {
       onSuccess: (d) => nav(`/tasks/${d.task.id}`, { replace: true }),
@@ -91,7 +92,7 @@ export function NewTaskPage() {
           <>
             <Field label="Описание"><Textarea value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} placeholder="Детали задачи…" /></Field>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Исполнитель"><AssigneeSelect value={f.assignee_id} onChange={(v) => setF({ ...f, assignee_id: v })} /></Field>
+              <Field label="Исполнитель"><AssigneeSelect value={f.assignee_id} onChange={(v) => setF({ ...f, assignee_id: v })} projectId={f.project_id} /></Field>
               <Field label="Приоритет">
                 <Select value={f.priority} onChange={(e) => setF({ ...f, priority: e.target.value as typeof f.priority })}>
                   {PRIORITIES.map((p) => <option key={p} value={p}>{PRIORITY_LABELS[p]}</option>)}
@@ -99,10 +100,11 @@ export function NewTaskPage() {
               </Field>
               <Field label="Дедлайн"><DatePicker value={f.due_date} onChange={(v) => setF({ ...f, due_date: v ?? '' })} time timeValue={f.due_time} onTimeChange={(v) => setF({ ...f, due_time: v })} placeholder="Дата и время" /></Field>
               <Field label="Спринт"><SprintSelect value={f.sprint_id} onChange={(v) => setF({ ...f, sprint_id: v })} /></Field>
+              <Field label="Проект"><ProjectSelect value={f.project_id} onChange={(v) => setF({ ...f, project_id: v })} /></Field>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Соисполнители"><MemberPicker value={f.participant_ids} onChange={(v) => setF({ ...f, participant_ids: v })} /></Field>
-              <Field label="Наблюдатели"><MemberPicker value={f.observer_ids} onChange={(v) => setF({ ...f, observer_ids: v })} /></Field>
+              <Field label="Соисполнители"><MemberPicker value={f.participant_ids} onChange={(v) => setF({ ...f, participant_ids: v })} projectId={f.project_id} /></Field>
+              <Field label="Наблюдатели"><MemberPicker value={f.observer_ids} onChange={(v) => setF({ ...f, observer_ids: v })} projectId={f.project_id} /></Field>
             </div>
             <Field label="Теги"><TagPicker value={f.tag_ids} onChange={(v) => setF({ ...f, tag_ids: v })} /></Field>
           </>
@@ -146,7 +148,7 @@ export function TaskPage() {
     );
   }
 
-  const editable = can('task.update.any') || (can('task.update.own') && task.creator_id === user?.id);
+  const editable = can('task.update.any') || task.project?.lead_id === user?.id || (can('task.update.own') && task.creator_id === user?.id);
   const patch = (d: Parameters<typeof update.mutate>[0]) =>
     update.mutate(d, { onError: (e) => toast(e instanceof ApiError ? e.message : 'Ошибка', 'err') });
 
@@ -198,7 +200,7 @@ export function TaskPage() {
 
         {/* Свойства — сайдбар на широких экранах */}
         <aside className="flex w-full shrink-0 flex-col gap-3 self-start rounded-xl border border-border bg-raised p-5 lg:w-72 xl:w-80">
-          <Field label="Исполнитель"><AssigneeSelect value={task.assignee_id} onChange={(v) => patch({ assignee_id: v })} /></Field>
+          <Field label="Исполнитель"><AssigneeSelect value={task.assignee_id} onChange={(v) => patch({ assignee_id: v })} projectId={task.project_id} /></Field>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-1">
             <Field label="Приоритет">
               <Select value={task.priority} disabled={!editable} onChange={(e) => patch({ priority: e.target.value as never })}>
@@ -215,13 +217,14 @@ export function TaskPage() {
               </Select>
             </Field>
             <Field label="Спринт"><SprintSelect value={task.sprint_id} onChange={(v) => patch({ sprint_id: v })} /></Field>
+            <Field label="Проект"><ProjectSelect value={task.project_id} onChange={(v) => patch({ project_id: v })} /></Field>
           </div>
 
           {editable && (
             <>
               <div className="border-t border-border" />
-              <Field label="Соисполнители"><MemberPicker value={participantIds} onChange={(v) => patch({ participant_ids: v, observer_ids: observerIds })} /></Field>
-              <Field label="Наблюдатели"><MemberPicker value={observerIds} onChange={(v) => patch({ participant_ids: participantIds, observer_ids: v })} /></Field>
+              <Field label="Соисполнители"><MemberPicker value={participantIds} onChange={(v) => patch({ participant_ids: v, observer_ids: observerIds })} projectId={task.project_id} /></Field>
+              <Field label="Наблюдатели"><MemberPicker value={observerIds} onChange={(v) => patch({ participant_ids: participantIds, observer_ids: v })} projectId={task.project_id} /></Field>
               <Field label="Теги"><TagPicker value={task.tags.map((t) => t.id)} onChange={(v) => patch({ tag_ids: v })} /></Field>
             </>
           )}

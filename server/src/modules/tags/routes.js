@@ -22,7 +22,7 @@ tagsRouter.post('/api/tags', asyncH(async (req, res) => {
   }
 }));
 
-tagsRouter.patch('/api/tags/:id', requirePermission('task.update.any'), asyncH(async (req, res) => {
+tagsRouter.patch('/api/tags/:id', requirePermission('board.manage'), asyncH(async (req, res) => {
   const tag = q.get('SELECT * FROM tags WHERE id = ?', Number(req.params.id));
   if (!tag) throw httpError(404, 'Тег не найден');
   const data = parseBody(createTagSchema.partial(), req.body);
@@ -30,7 +30,7 @@ tagsRouter.patch('/api/tags/:id', requirePermission('task.update.any'), asyncH(a
   res.json({ tag: q.get('SELECT * FROM tags WHERE id = ?', tag.id) });
 }));
 
-tagsRouter.delete('/api/tags/:id', requirePermission('task.update.any'), asyncH(async (req, res) => {
+tagsRouter.delete('/api/tags/:id', requirePermission('board.manage'), asyncH(async (req, res) => {
   const tag = q.get('SELECT * FROM tags WHERE id = ?', Number(req.params.id));
   if (!tag) throw httpError(404, 'Тег не найден');
   q.run('DELETE FROM tags WHERE id = ?', tag.id);

@@ -144,7 +144,7 @@ export function ColumnsModal({ open, onClose }: { open: boolean; onClose: () => 
   const { data: columns = [] } = useColumns();
   const m = useColumnMutations();
   const can = useCan();
-  const canManage = can('task.update.any');
+  const canManage = can('board.manage');
   const [newName, setNewName] = useState('');
 
   const add = () => {

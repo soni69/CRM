@@ -1,5 +1,6 @@
 import { Select, Button } from '../../../shared/ui';
 import { useColumns } from '../../columns';
+import { useProjects } from '../../projects';
 import { PRIORITIES, PRIORITY_LABELS } from '@crm/contracts';
 import type { TaskFilters } from '../hooks';
 import type { User, Tag } from '@crm/contracts';
@@ -13,6 +14,7 @@ export function FilterChips({ filters, setFilter, reset, active, users, tags }: 
   tags: Tag[];
 }) {
   const { data: columns = [] } = useColumns();
+  const { data: projects = [] } = useProjects();
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Select value={filters.status ?? ''} onChange={(e) => setFilter('status', e.target.value || undefined)} className="h-8 w-auto text-xs">
@@ -27,6 +29,12 @@ export function FilterChips({ filters, setFilter, reset, active, users, tags }: 
         <option value="">Любой приоритет</option>
         {PRIORITIES.map((p) => <option key={p} value={p}>{PRIORITY_LABELS[p]}</option>)}
       </Select>
+      {projects.length > 0 && (
+        <Select value={filters.project_id ?? ''} onChange={(e) => setFilter('project_id', e.target.value || undefined)} className="h-8 w-auto max-w-44 text-xs">
+          <option value="">Все проекты</option>
+          {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </Select>
+      )}
       {tags.length > 0 && (
         <Select value={filters.tag_id ?? ''} onChange={(e) => setFilter('tag_id', e.target.value || undefined)} className="h-8 w-auto text-xs">
           <option value="">Все теги</option>

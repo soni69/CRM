@@ -7,7 +7,7 @@ import { useState, type FormEvent } from 'react';
 import { Navigate } from 'react-router-dom';
 import { ApiError } from '../../../shared/api/client';
 
-const ROLE_TONE: Record<Role, 'red' | 'accent' | 'gray'> = { admin: 'red', manager: 'accent', member: 'gray' };
+const ROLE_TONE: Record<Role, 'red' | 'accent' | 'gray'> = { admin: 'red', lead: 'accent', manager: 'gray' };
 
 export function UsersPage() {
   const { user } = useAuth();
@@ -16,7 +16,7 @@ export function UsersPage() {
   const toast = useToast();
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [creating, setCreating] = useState(false);
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'member' as Role });
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'manager' as Role });
   const [error, setError] = useState('');
 
   if (user && user.role !== 'admin') return <Navigate to="/" replace />;
@@ -26,7 +26,7 @@ export function UsersPage() {
     e.preventDefault();
     setError('');
     mut.create.mutate(form, {
-      onSuccess: () => { setCreating(false); setForm({ name: '', email: '', password: '', role: 'member' }); },
+      onSuccess: () => { setCreating(false); setForm({ name: '', email: '', password: '', role: 'manager' }); },
       onError: (err) => setError(err instanceof ApiError ? err.message : 'Ошибка создания'),
     });
   };

@@ -1,12 +1,12 @@
 import { z } from 'zod';
 
-export const ROLES = ['admin', 'manager', 'member'] as const;
+export const ROLES = ['admin', 'lead', 'manager'] as const;
 export type Role = (typeof ROLES)[number];
 
 export const ROLE_LABELS: Record<Role, string> = {
   admin: 'Администратор',
+  lead: 'Тимлид',
   manager: 'Менеджер',
-  member: 'Участник',
 };
 
 export const userSchema = z.object({

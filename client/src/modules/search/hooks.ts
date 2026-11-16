@@ -10,6 +10,7 @@ export interface TaskFilters {
   priority?: string;
   tag_id?: string;
   sprint_id?: string;
+  project_id?: string;
   parent_id?: string;
   overdue?: string;
   sort?: string;

@@ -21,7 +21,7 @@ export function CommentList({ taskId }: { taskId: number }) {
               <div className="flex items-baseline gap-2">
                 <span className="text-sm font-medium">{c.author?.name}</span>
                 <span className="text-[11px] text-faint">{formatDateTime(c.created_at)}</span>
-                {(c.author_id === user?.id || user?.role === 'admin' || user?.role === 'manager') && (
+                {(c.author_id === user?.id || user?.role === 'admin' || user?.role === 'lead') && (
                   <button onClick={() => mut.remove.mutate(c.id)} className="ml-auto text-[11px] text-faint opacity-0 hover:text-danger group-hover:opacity-100">удалить</button>
                 )}
               </div>

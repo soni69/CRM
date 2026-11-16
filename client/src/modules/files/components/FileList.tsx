@@ -27,7 +27,7 @@ export function FileList({ taskId }: { taskId: number }) {
               <a href={filesApi.downloadUrl(f.id)} className="block truncate text-sm font-medium text-accent hover:underline">{f.orig_name}</a>
               <p className="text-[11px] text-faint">{fmtSize(f.size)} · {f.uploader?.name} · {formatDateTime(f.created_at)}</p>
             </div>
-            {(f.uploader_id === user?.id || user?.role !== 'member') && (
+            {(f.uploader_id === user?.id || user?.role !== 'manager') && (
               <button onClick={() => mut.remove.mutate(f.id)} className="text-faint opacity-0 hover:text-danger group-hover:opacity-100">×</button>
             )}
           </div>

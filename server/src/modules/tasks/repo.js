@@ -42,6 +42,14 @@ export function attachView(tasks) {
      FROM tasks t WHERE t.id IN (${ph})`, ...ids,
   );
 
+  const projectIds = [...new Set(tasks.map((t) => t.project_id).filter(Boolean))];
+  const projects = projectIds.length
+    ? Object.fromEntries(q.all(
+        `SELECT id, name, color, lead_id FROM projects WHERE id IN (${projectIds.map(() => '?').join(',')})`,
+        ...projectIds,
+      ).map((p) => [p.id, p]))
+    : {};
+
   const groupBy = (rows, key) => {
     const m = new Map();
     for (const r of rows) (m.get(r[key]) ?? m.set(r[key], []).get(r[key])).push(r);
@@ -55,6 +63,7 @@ export function attachView(tasks) {
   return tasks.map((t) => ({
     ...parseRec(t),
     done: done.has(t.status),
+    project: t.project_id ? (projects[t.project_id] ?? null) : null,
     assignee: t.assignee_id ? (users[t.assignee_id] ?? null) : null,
     creator: users[t.creator_id],
     tags: (tagsByTask.get(t.id) ?? []).map(({ id, name, color }) => ({ id, name, color })),
@@ -78,12 +87,12 @@ export function listTasks(user, extraWhere = '1=1', extraParams = []) {
 export function createTaskRow(data, creatorId) {
   const { lastInsertRowid } = q.run(
     `INSERT INTO tasks (title, description, status, priority, start_date, due_date, due_time,
-       assignee_id, creator_id, parent_id, sprint_id, time_estimate)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+       assignee_id, creator_id, parent_id, sprint_id, project_id, time_estimate)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     data.title, data.description ?? '', firstColumnKey(), data.priority ?? 'medium',
     data.start_date ?? null, data.due_date ?? null, data.due_time ?? null,
     data.assignee_id ?? null, creatorId, data.parent_id ?? null,
-    data.sprint_id ?? null, data.time_estimate ?? 0,
+    data.sprint_id ?? null, data.project_id ?? null, data.time_estimate ?? 0,
   );
   return Number(lastInsertRowid);
 }

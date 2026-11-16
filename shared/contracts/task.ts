@@ -53,6 +53,7 @@ export const taskSchema = z.object({
   creator_id: z.number(),
   parent_id: z.number().nullable(),
   sprint_id: z.number().nullable(),
+  project_id: z.number().nullable(),
   time_estimate: z.number(),
   recurrence: recurrenceSchema.nullable(),
   created_at: z.string(),
@@ -70,6 +71,7 @@ export type TaskMember = z.infer<typeof taskMemberSchema>;
 // Задача с подгруженными связями — формат списка и карточки
 export const taskViewSchema = taskSchema.extend({
   done: z.boolean().optional(), // статус из завершающей колонки
+  project: z.object({ id: z.number(), name: z.string(), color: z.string(), lead_id: z.number().nullable() }).nullable().optional(),
   assignee: userSchema.nullable().optional(),
   creator: userSchema.optional(),
   tags: z.array(tagSchema).default([]),
@@ -97,6 +99,7 @@ export const createTaskSchema = z.object({
   assignee_id: z.number().int().positive().nullish(),
   parent_id: z.number().int().positive().nullish(),
   sprint_id: z.number().int().positive().nullish(),
+  project_id: z.number().int().positive().nullish(),
   time_estimate: z.number().int().min(0).default(0),
   participant_ids: z.array(z.number().int().positive()).default([]),
   observer_ids: z.array(z.number().int().positive()).default([]),

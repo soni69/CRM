@@ -7,7 +7,7 @@ export const registerSchema = z.object({
   password: z.string().min(6, 'Пароль короче 6 символов').max(100),
 });
 
-export const createUserSchema = registerSchema.extend({ role: z.enum(ROLES).default('member') });
+export const createUserSchema = registerSchema.extend({ role: z.enum(ROLES).default('manager') });
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 
 export const loginSchema = z.object({

@@ -20,7 +20,7 @@ export function TaskCard({ task, onOpen, selected, onSelect }: {
   const { user } = useAuth();
   const overdue = isOverdue(task.due_date, !!task.done, task.due_time);
   const c = task.counts;
-  const canSelect = user && (user.role !== 'member' || task.creator_id === user.id || task.assignee_id === user.id);
+  const canSelect = user && (user.role !== 'manager' || task.creator_id === user.id || task.assignee_id === user.id);
 
   return (
     <div
@@ -43,6 +43,11 @@ export function TaskCard({ task, onOpen, selected, onSelect }: {
         <PriorityIcon priority={task.priority} className="mt-1" />
         <div className="min-w-0 flex-1">
           <p className={cn('font-medium leading-snug', task.done && 'text-muted line-through')}>{task.title}</p>
+          {task.project && (
+            <span className="mt-1.5 inline-flex w-fit items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium" style={{ background: task.project.color + '1f', color: task.project.color }}>
+              <span className="h-1.5 w-1.5 rounded-sm" style={{ background: task.project.color }} />{task.project.name}
+            </span>
+          )}
           {task.tags.length > 0 && (
             <div className="mt-1.5 flex flex-wrap gap-1">
               {task.tags.map((t) => (

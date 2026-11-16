@@ -4,6 +4,8 @@ import {
 } from '../roles/index.js';
 import { recordEvent } from '../history/index.js';
 import { columnByKey } from '../columns/index.js';
+import { projectExists } from '../projects/index.js';
+import { isProjectMember, isProjectLead } from '../roles/index.js';
 import {
   getTask, attachView, listTasks, memberKinds, createTaskRow, updateTaskRow,
   setTaskTags, setTaskMembers, deleteTaskRow, tx, q,
@@ -11,6 +13,16 @@ import {
 
 const userExists = (id) => !!q.get('SELECT 1 FROM users WHERE id = ?', id);
 const sprintExists = (id) => !!q.get('SELECT 1 FROM sprints WHERE id = ?', id);
+
+// Исполнитель/участники должны быть членами проекта задачи
+function assertProjectFit(user, projectId, userIds) {
+  if (!projectId) return;
+  for (const uid of userIds.filter(Boolean)) {
+    if (!isProjectMember({ id: uid }, projectId)) {
+      throw httpError(400, 'Исполнитель и участники должны быть членами проекта');
+    }
+  }
+}
 
 export function mustSeeTask(user, id) {
   const task = getTask(id);
@@ -25,13 +37,22 @@ export function createTask(user, data) {
 
   if (data.assignee_id != null) {
     if (!userExists(data.assignee_id)) throw httpError(400, 'Исполнитель не найден');
-    // member может назначить только себя
-    if (!can(user, 'task.assign.any') && data.assignee_id !== user.id) {
-      throw httpError(403, 'Можно назначать только себя');
-    }
+    // admin — любого, тимлид — в своём проекте, manager — только себя
+    const canSet = can(user, 'task.assign.any')
+      || isProjectLead(user, data.project_id)
+      || data.assignee_id === user.id;
+    if (!canSet) throw httpError(403, 'Можно назначать только себя');
   }
   if (data.parent_id != null && !getTask(data.parent_id)) throw httpError(400, 'Родительская задача не найдена');
   if (data.sprint_id != null && !sprintExists(data.sprint_id)) throw httpError(400, 'Спринт не найден');
+  if (data.project_id != null) {
+    if (!projectExists(data.project_id)) throw httpError(400, 'Проект не найден');
+    if (user.role !== 'admin' && !isProjectMember(user, data.project_id)) {
+      throw httpError(403, 'Вы не участник этого проекта');
+    }
+    assertProjectFit(user, data.project_id,
+      [data.assignee_id, ...(data.participant_ids ?? []), ...(data.observer_ids ?? [])]);
+  }
 
   const id = tx(() => {
     const id = createTaskRow(data, user.id);
@@ -48,7 +69,7 @@ export function updateTask(user, id, data) {
   if (!canEditTask(user, task)) throw httpError(403, 'Нет прав на редактирование');
 
   const diff = {};
-  for (const f of ['title', 'description', 'priority', 'start_date', 'due_date', 'due_time', 'parent_id', 'sprint_id', 'time_estimate']) {
+  for (const f of ['title', 'description', 'priority', 'start_date', 'due_date', 'due_time', 'parent_id', 'sprint_id', 'project_id', 'time_estimate']) {
     if (f in data) diff[f] = data[f];
   }
   if ('assignee_id' in data && data.assignee_id !== task.assignee_id) {
@@ -58,6 +79,19 @@ export function updateTask(user, id, data) {
   if (data.parent_id != null && !getTask(data.parent_id)) throw httpError(400, 'Родительская задача не найдена');
   if (data.sprint_id != null && data.sprint_id !== task.sprint_id && !sprintExists(data.sprint_id)) {
     throw httpError(400, 'Спринт не найден');
+  }
+  const nextProject = 'project_id' in data ? data.project_id : task.project_id;
+  if (data.project_id != null && data.project_id !== task.project_id) {
+    if (!projectExists(data.project_id)) throw httpError(400, 'Проект не найден');
+    if (user.role !== 'admin' && !isProjectMember(user, data.project_id)) {
+      throw httpError(403, 'Вы не участник этого проекта');
+    }
+  }
+  if (nextProject) {
+    const nextAssignee = 'assignee_id' in data ? data.assignee_id : task.assignee_id;
+    const curMembers = q.all('SELECT user_id FROM task_members WHERE task_id = ?', id).map((r) => r.user_id);
+    assertProjectFit(user, nextProject,
+      [nextAssignee, ...(data.participant_ids ?? curMembers), ...(data.observer_ids ?? [])]);
   }
 
   tx(() => {
@@ -120,7 +154,7 @@ export function setRecurrence(user, id, freq) {
 
 export function deleteTask(user, id) {
   const task = mustSeeTask(user, id);
-  if (!canDeleteTask(user)) throw httpError(403, 'Нет прав на удаление');
+  if (!canDeleteTask(user, task)) throw httpError(403, 'Нет прав на удаление');
   deleteTaskRow(id);
 }
 

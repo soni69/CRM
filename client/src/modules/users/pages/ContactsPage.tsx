@@ -6,7 +6,7 @@ import { Avatar, Badge, Button, Field, Input, Modal, ModalHeader, PageSpinner, E
 import { ROLE_LABELS, type Role } from '@crm/contracts';
 import { ApiError } from '../../../shared/api/client';
 
-const ROLE_TONE: Record<Role, 'red' | 'accent' | 'gray'> = { admin: 'red', manager: 'accent', member: 'gray' };
+const ROLE_TONE: Record<Role, 'red' | 'accent' | 'gray'> = { admin: 'red', lead: 'accent', manager: 'gray' };
 
 // Форма профиля: имя, телефон, телеграм. Свой — каждому, чужой — админу
 function ProfileModal({ user, onClose }: { user: ListedUser; onClose: () => void }) {

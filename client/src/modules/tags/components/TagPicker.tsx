@@ -37,7 +37,7 @@ export function TagPicker({ value, onChange }: { value: number[]; onChange: (ids
             {t.name}
           </button>
         ))}
-        {can('task.update.any') && tags.length > 0 && (
+        {can('board.manage') && tags.length > 0 && (
           <button
             type="button" onClick={() => setManaging(true)} title="Управление тегами"
             className="rounded-md p-1 text-faint hover:bg-hover hover:text-text"

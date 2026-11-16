@@ -11,6 +11,7 @@ export const searchParamsSchema = z.object({
   priority: z.enum(PRIORITIES).optional(),
   tag_id: z.coerce.number().int().positive().optional(),
   sprint_id: z.coerce.number().int().positive().optional(),
+  project_id: z.coerce.number().int().positive().optional(),
   parent_id: z.coerce.number().int().positive().optional(),
   overdue: z.coerce.boolean().optional(),
   due_before: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
@@ -37,6 +38,7 @@ export function searchTasks(user, params) {
   if (params.assignee_id) { conds.push('t.assignee_id = ?'); args.push(params.assignee_id); }
   if (params.priority) { conds.push('t.priority = ?'); args.push(params.priority); }
   if (params.sprint_id) { conds.push('t.sprint_id = ?'); args.push(params.sprint_id); }
+  if (params.project_id) { conds.push('t.project_id = ?'); args.push(params.project_id); }
   if (params.parent_id !== undefined) { conds.push('t.parent_id = ?'); args.push(params.parent_id); }
   if (params.tag_id) {
     conds.push('EXISTS (SELECT 1 FROM task_tags tt WHERE tt.task_id = t.id AND tt.tag_id = ?)');

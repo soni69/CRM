@@ -26,6 +26,7 @@ export const API = {
   files: { download: (id: number) => `/api/files/${id}/download`, one: (id: number) => `/api/files/${id}` },
   tags: { list: '/api/tags', one: (id: number) => `/api/tags/${id}` },
   columns: { list: '/api/columns', one: (id: number) => `/api/columns/${id}`, reorder: '/api/columns/reorder' },
+  projects: { list: '/api/projects', one: (id: number) => `/api/projects/${id}`, members: (id: number) => `/api/projects/${id}/members` },
   sprints: { list: '/api/sprints', one: (id: number) => `/api/sprints/${id}` },
   templates: {
     list: '/api/templates',

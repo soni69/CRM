@@ -26,7 +26,7 @@ export function SprintsPage() {
       </div>
       <div className="flex flex-col gap-2">
         {sprints.map((s) => (
-          <SprintRow key={s.id} s={s} canEdit={can('task.update.any')} onDelete={() => setDelId(s.id)} onStatus={(st) => mut.update.mutate({ id: s.id, d: { status: st } })} />
+          <SprintRow key={s.id} s={s} canEdit={can('board.manage')} onDelete={() => setDelId(s.id)} onStatus={(st) => mut.update.mutate({ id: s.id, d: { status: st } })} />
         ))}
         {!sprints.length && <EmptyState title="Спринтов нет" hint="Создайте первый спринт" action={<Button size="sm" onClick={() => setCreating(true)}>+ Создать</Button>} />}
       </div>

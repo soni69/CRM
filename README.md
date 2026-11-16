@@ -1,4 +1,4 @@
-# TeamTasks CRM
+# TeamManager CRM
 
 Веб-приложение для управления задачами команды: Kanban-доска, роли и права,
 поиск/фильтры, подзадачи, чек-листы, комментарии, файлы, спринты, Гант,
@@ -37,8 +37,8 @@ npm start        # сервер отдаёт и статику, и API на :300
 ## Docker (публичная ссылка)
 
 ```bash
-docker build -t teamtasks .
-docker run -p 3001:3001 -v tt_data:/app/data -v tt_uploads:/app/uploads teamtasks
+docker build -t teammanager .
+docker run -p 3001:3001 -v tt_data:/app/data -v tt_uploads:/app/uploads teammanager
 ```
 
 Деплой на Render/Railway: выбрать «Docker», указать репозиторий — сервис

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "TeamTasks CRM — управление задачами команды",
+  "description": "TeamManager CRM — управление задачами команды",
   "workspaces": ["shared/contracts", "server", "client"],
   "scripts": {
     "dev": "concurrently -n server,client -c blue,green \"npm run dev -w server\" \"npm run dev -w client\"",

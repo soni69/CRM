@@ -83,7 +83,7 @@ export function Layout() {
       {/* Левый сайдбар */}
       <aside className={cn('hidden shrink-0 flex-col border-r border-border bg-raised transition-[width] duration-200 sm:flex', collapsed ? 'w-14' : 'w-56')}>
         <div className={cn('flex items-center pb-2 pt-4', collapsed ? 'justify-center px-0' : 'justify-between px-4')}>
-          <NavLink to="/" title="TeamTasks">
+          <NavLink to="/" title="TeamManager">
             {collapsed ? (
               <svg width="22" height="22" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="var(--accent)"/><path d="M9 17.5l4.5 4.5L23 11.5" stroke="#fff" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
             ) : <Logo size={22} />}

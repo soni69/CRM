@@ -28,7 +28,7 @@ async function pollTelegram() {
         q.run('UPDATE users SET telegram_chat_id = ? WHERE id = ?', String(msg.chat.id), user.id);
         await tgApi('sendMessage', {
           chat_id: msg.chat.id,
-          text: `Готово, ${user.name.split(' ')[0]}! Уведомления TeamTasks будут приходить сюда.`,
+          text: `Готово, ${user.name.split(' ')[0]}! Уведомления TeamManager будут приходить сюда.`,
         });
       }
     }
@@ -63,7 +63,7 @@ export async function deliver(userId, n) {
       });
       await transport.sendMail({
         from: config.smtpFrom ?? config.smtpUser, to: user.email,
-        subject: `TeamTasks: ${n.title}`, text,
+        subject: `TeamManager: ${n.title}`, text,
       });
     } catch { /* почта недоступна — уведомление остаётся в приложении */ }
   }

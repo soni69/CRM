@@ -141,7 +141,7 @@ export function Layout() {
 
       {/* Контент */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <main className="min-h-0 flex-1"><Outlet /></main>
+        <main className="min-h-0 flex-1 overflow-y-auto"><Outlet /></main>
         {/* Мобильная навигация */}
         <nav className="flex shrink-0 items-center justify-around border-t border-border bg-raised py-1 sm:hidden">
           {items.map((n) => (

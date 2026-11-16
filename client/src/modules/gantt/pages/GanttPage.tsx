@@ -49,7 +49,7 @@ export function GanttPage() {
       task: t,
       from: t.start_date ?? t.due_date ?? t.created_at.slice(0, 10),
       to: t.due_date ?? t.start_date ?? t.created_at.slice(0, 10),
-    })).map((r) => ({ ...r, fromMs: dayMs(r.from), toMs: dayMs(r.to) }))
+    })).map((r) => ({ ...r, fromMs: dayMs(r.from), toMs: dayMs(r.to) + 864e5 }))
       .sort((a, b) => a.fromMs - b.fromMs);
 
     let ws: number, we: number;
@@ -63,7 +63,7 @@ export function GanttPage() {
         : dayMs(dstr(new Date()));
       we = ws + range.ms;
     }
-    const rows = range.id === 'all' ? dated : dated.filter((r) => r.toMs >= ws && r.fromMs <= we);
+    const rows = range.id === 'all' ? dated : dated.filter((r) => r.toMs > ws && r.fromMs < we);
     const hourly = we - ws <= 2 * 864e5;
     const PX = hourly ? HOUR_PX : DAY_PX;
     const tickMs = hourly ? 36e5 : 864e5;
@@ -129,7 +129,7 @@ export function GanttPage() {
             <div className="relative" style={{ width: LABEL_W + W }}>
               {rows.map(({ task, from, to, fromMs, toMs }) => {
                 const left = Math.max(0, x(fromMs));
-                const right = Math.min(W, x(toMs) + PX);
+                const right = Math.min(W, x(toMs));
                 return (
                   <div key={task.id} className="flex border-b border-border/60" style={{ height: ROW }}>
                     <button

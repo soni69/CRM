@@ -62,7 +62,7 @@ export function BoardPage() {
             Колонки
           </button>
           <div className="flex rounded-lg border border-border p-0.5">
-            {([['board', 'Доска'], ['list', 'Список']] as const).map(([v, l]) => (
+            {([['board', 'Канбан'], ['list', 'Список']] as const).map(([v, l]) => (
               <button key={v} onClick={() => setView(v)} className={cn('rounded-md px-2.5 py-1 text-xs font-medium', view === v ? 'bg-hover text-text' : 'text-muted')}>{l}</button>
             ))}
           </div>

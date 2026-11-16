@@ -90,7 +90,7 @@ export function ColumnsModal({ open, onClose }: { open: boolean; onClose: () => 
 
   return (
     <Modal open={open} onClose={onClose} className="max-w-2xl">
-      <ModalHeader title="Колонки доски" onClose={onClose} />
+      <ModalHeader title="Колонки канбана" onClose={onClose} />
       <div className="flex flex-col gap-2 p-4">
         {columns.map((c, i) => (
           <ColumnRow key={c.id} col={c} index={i} total={columns.length} />

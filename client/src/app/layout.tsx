@@ -7,7 +7,7 @@ import { cn } from '../shared/utils/cn';
 import { ROLE_LABELS } from '@crm/contracts';
 
 const NAV = [
-  { to: '/', label: 'Доска', end: true },
+  { to: '/', label: 'Канбан', end: true },
   { to: '/gantt', label: 'Гант' },
   { to: '/sprints', label: 'Спринты' },
   { to: '/reports', label: 'Отчёты' },

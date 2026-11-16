@@ -7,6 +7,8 @@ import { useTasks } from '../../tasks';
 import { useColumns } from '../../columns';
 import { TaskRow } from '../../tasks/components/TaskRow';
 import { Avatar, Button, ConfirmDialog, PageSpinner, EmptyState } from '../../../shared/ui';
+import { formatDate, isOverdue } from '../../../shared/utils/format';
+import { cn } from '../../../shared/utils/cn';
 import { ProjectModal } from '../components/ProjectModal';
 import { ProjectStages } from '../components/ProjectStages';
 import type { TaskView } from '@crm/contracts';
@@ -100,6 +102,11 @@ export function ProjectPage() {
             {project.member_count} участ.
           </span>
           <span className="text-faint">{project.task_count} задач</span>
+          {project.due_date && (
+            <span className={cn('font-mono text-xs', isOverdue(project.due_date, false) ? 'text-danger' : 'text-muted')}>
+              до {formatDate(project.due_date)}
+            </span>
+          )}
         </div>
         <div className="mt-4">
           <Button size="sm" onClick={() => nav(`/tasks/new?project=${project.id}`)}>+ Задача в проект</Button>

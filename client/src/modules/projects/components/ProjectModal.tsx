@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import type { ProjectView, CreateProjectInput } from '@crm/contracts';
-import { Avatar, Button, Field, Input, Modal, ModalHeader, Select } from '../../../shared/ui';
+import { Avatar, Button, DatePicker, Field, Input, Modal, ModalHeader, Select } from '../../../shared/ui';
 import { ApiError } from '../../../shared/api/client';
 import { cn } from '../../../shared/utils/cn';
 import { useUsers } from '../../users';
@@ -15,6 +15,7 @@ export function ProjectModal({ project, onClose }: { project?: ProjectView; onCl
     name: project?.name ?? '',
     description: project?.description ?? '',
     goal: project?.goal ?? '',
+    due_date: project?.due_date ?? '',
     color: project?.color ?? PALETTE[0],
     lead_id: project?.lead_id ?? null,
     member_ids: project?.member_ids ?? [],
@@ -30,7 +31,7 @@ export function ProjectModal({ project, onClose }: { project?: ProjectView; onCl
   const submit = (e: FormEvent) => {
     e.preventDefault();
     setError('');
-    const payload = { ...form, lead_id: form.lead_id || null };
+    const payload = { ...form, lead_id: form.lead_id || null, due_date: form.due_date || null };
     const opts = {
       onSuccess: () => onClose(),
       onError: (err: unknown) => setError(err instanceof ApiError ? err.message : 'Ошибка'),
@@ -62,6 +63,9 @@ export function ProjectModal({ project, onClose }: { project?: ProjectView; onCl
             placeholder="Чего хотим достичь этим проектом?"
             className="w-full rounded-md border border-border bg-raised px-2.5 py-1.5 text-sm outline-none focus:border-accent"
           />
+        </Field>
+        <Field label="Дедлайн проекта">
+          <DatePicker value={form.due_date} onChange={(v) => setForm({ ...form, due_date: v ?? '' })} placeholder="Без срока" />
         </Field>
         <Field label="Цвет">
           <div className="flex gap-1.5">

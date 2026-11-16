@@ -46,11 +46,11 @@ export function listProjects(user) {
 
 export const projectExists = (id) => !!q.get('SELECT 1 FROM projects WHERE id = ?', id);
 
-export function createProject({ name, description, goal, color, lead_id, member_ids }) {
+export function createProject({ name, description, goal, due_date, color, lead_id, member_ids }) {
   const id = tx(() => {
     const { lastInsertRowid } = q.run(
-      'INSERT INTO projects (name, description, goal, color, lead_id) VALUES (?,?,?,?,?)',
-      name, description ?? '', goal ?? '', color, lead_id ?? null,
+      'INSERT INTO projects (name, description, goal, due_date, color, lead_id) VALUES (?,?,?,?,?,?)',
+      name, description ?? '', goal ?? '', due_date ?? null, color, lead_id ?? null,
     );
     const pid = Number(lastInsertRowid);
     const memberSet = new Set(member_ids ?? []);
@@ -63,13 +63,14 @@ export function createProject({ name, description, goal, color, lead_id, member_
   return attach(getProject(id));
 }
 
-export function updateProject(id, { name, description, goal, color, lead_id, member_ids }) {
+export function updateProject(id, { name, description, goal, due_date, color, lead_id, member_ids }) {
   const p = getProject(id);
   if (!p) throw httpError(404, 'Проект не найден');
   tx(() => {
     q.run(
-      'UPDATE projects SET name = ?, description = ?, goal = ?, color = ?, lead_id = ? WHERE id = ?',
-      name ?? p.name, description ?? p.description, goal ?? p.goal ?? '', color ?? p.color,
+      'UPDATE projects SET name = ?, description = ?, goal = ?, due_date = ?, color = ?, lead_id = ? WHERE id = ?',
+      name ?? p.name, description ?? p.description, goal ?? p.goal ?? '',
+      due_date === undefined ? p.due_date : due_date, color ?? p.color,
       lead_id === undefined ? p.lead_id : lead_id, id,
     );
     if (member_ids !== undefined) setProjectMembers(id, member_ids);

@@ -117,6 +117,7 @@ CREATE TABLE IF NOT EXISTS projects (
   name        TEXT NOT NULL,
   description TEXT NOT NULL DEFAULT '',
   goal        TEXT NOT NULL DEFAULT '',
+  due_date    TEXT,
   color       TEXT NOT NULL DEFAULT '#5e6ad2',
   lead_id     INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at  TEXT NOT NULL DEFAULT (datetime('now'))
@@ -172,6 +173,7 @@ export function migrate() {
   if (!taskCols.includes('project_id')) db.exec('ALTER TABLE tasks ADD COLUMN project_id INTEGER REFERENCES projects(id) ON DELETE SET NULL');
   const projCols = db.prepare('PRAGMA table_info(projects)').all().map((c) => c.name);
   if (!projCols.includes('goal')) db.exec("ALTER TABLE projects ADD COLUMN goal TEXT NOT NULL DEFAULT ''");
+  if (!projCols.includes('due_date')) db.exec('ALTER TABLE projects ADD COLUMN due_date TEXT');
 
   // Новые роли: member→manager, manager→lead (через временную метку)
   const usersSql = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='users'").get()?.sql ?? '';

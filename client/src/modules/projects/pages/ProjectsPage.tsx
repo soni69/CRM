@@ -6,6 +6,8 @@ import { useUsers } from '../../../modules/users';
 import type { ProjectView } from '@crm/contracts';
 import { Avatar, Button, ConfirmDialog, PageSpinner, EmptyState } from '../../../shared/ui';
 import { useCan } from '../../../modules/roles';
+import { formatDate, isOverdue } from '../../../shared/utils/format';
+import { cn } from '../../../shared/utils/cn';
 import { ProjectModal } from '../components/ProjectModal';
 
 export function ProjectsPage() {
@@ -80,7 +82,14 @@ export function ProjectsPage() {
                   })}
                   {p.member_count > 6 && <span className="pl-2.5">+{p.member_count - 6}</span>}
                 </div>
-                <span>{p.member_count} участ. · {p.task_count} задач</span>
+                <span className="inline-flex items-center gap-2">
+                  {p.member_count} участ. · {p.task_count} задач
+                  {p.due_date && (
+                    <span className={cn('font-mono', isOverdue(p.due_date, false) ? 'text-danger' : 'text-faint')}>
+                      до {formatDate(p.due_date)}
+                    </span>
+                  )}
+                </span>
               </div>
             </div>
           ))}

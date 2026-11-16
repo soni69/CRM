@@ -1,0 +1,18 @@
+services:
+  teammanager:
+    build: .
+    container_name: teammanager
+    ports:
+      - "80:3001"   # сайт сразу на http://<IP>
+    env_file: .env.production
+    environment:
+      DATA_DIR: /app/data
+      UPLOADS_DIR: /app/uploads
+    volumes:
+      - tt_data:/app/data
+      - tt_uploads:/app/uploads
+    restart: unless-stopped
+
+volumes:
+  tt_data:
+  tt_uploads:

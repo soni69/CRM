@@ -24,9 +24,9 @@ export function ReportsPage() {
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <h1 className="text-lg font-semibold">Отчёты</h1>
         {!can('report.team') && <Badge tone="gray">только ваши задачи</Badge>}
-        <div className="ml-auto flex items-end gap-2">
-          <Field label="С"><DatePicker value={from} onChange={(v) => setFrom(v ?? '')} className="w-40" /></Field>
-          <Field label="По"><DatePicker value={to} onChange={(v) => setTo(v ?? '')} className="w-40" /></Field>
+        <div className="ml-auto flex w-full items-end gap-2 sm:w-auto">
+          <Field label="С" className="flex-1 sm:flex-none"><DatePicker value={from} onChange={(v) => setFrom(v ?? '')} className="w-full sm:w-40" /></Field>
+          <Field label="По" className="flex-1 sm:flex-none"><DatePicker value={to} onChange={(v) => setTo(v ?? '')} className="w-full sm:w-40" /></Field>
         </div>
       </div>
 

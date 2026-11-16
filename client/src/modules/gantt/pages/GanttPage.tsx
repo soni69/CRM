@@ -131,6 +131,8 @@ export function GanttPage() {
   if (isLoading) return <PageSpinner />;
 
   const hourly = tickMs === 36e5;
+  // Подписи не чаще чем раз в ~30px — иначе наезжают друг на друга при отдалении
+  const labelEvery = Math.max(1, Math.ceil(30 / PX));
   const ticks: number[] = [];
   for (let t = winStart; t < winStart + (W / PX) * tickMs; t += tickMs) ticks.push(t);
   const x = (ms: number) => (ms - winStart) / tickMs * PX;
@@ -186,6 +188,7 @@ export function GanttPage() {
               <div className="relative" style={{ width: W, height: 30 }}>
                 {ticks.map((t, i) => {
                   const d = new Date(t);
+                  if (i % labelEvery !== 0 && (hourly || !dstr(d).endsWith('01'))) return null;
                   return hourly ? (
                     <span key={t} className="absolute top-1.5 font-mono text-[9px] text-faint" style={{ left: i * PX + 3 }}>
                       {d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}

@@ -6,7 +6,7 @@ import { GanttPage } from '../modules/gantt';
 import { SprintsPage, SprintBoardPage } from '../modules/sprints';
 import { ReportsPage } from '../modules/reports';
 import { UsersPage, ContactsPage } from '../modules/users';
-import { ProjectsPage } from '../modules/projects';
+import { ProjectsPage, ProjectPage } from '../modules/projects';
 import { Layout } from './layout';
 
 function Protected() {
@@ -46,6 +46,7 @@ export const router = createBrowserRouter([
           { path: '/users', element: <UsersPage /> },
           { path: '/contacts', element: <ContactsPage /> },
           { path: '/projects', element: <ProjectsPage /> },
+          { path: '/projects/:id', element: <ProjectPage /> },
         ],
       },
     ],

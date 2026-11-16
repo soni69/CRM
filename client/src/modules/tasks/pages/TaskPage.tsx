@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   Tabs, Button, Field, Input, Textarea, Select, DatePicker,
   ConfirmDialog, Dropdown, DropdownItem, useToast, PageSpinner,
@@ -54,7 +54,9 @@ export function NewTaskPage() {
   const create = useCreateTask();
   const { data: templates = [] } = useTemplates();
   const tmut = useTemplateMutations();
-  const [f, setF] = useState({ title: '', description: '', priority: 'medium' as const, assignee_id: null as number | null, due_date: '', due_time: null as string | null, sprint_id: null as number | null, project_id: null as number | null, tag_ids: [] as number[], template_id: '', participant_ids: [] as number[], observer_ids: [] as number[] });
+  const [params] = useSearchParams();
+  const presetProject = params.get('project') ? Number(params.get('project')) : null;
+  const [f, setF] = useState({ title: '', description: '', priority: 'medium' as const, assignee_id: null as number | null, due_date: '', due_time: null as string | null, sprint_id: null as number | null, project_id: presetProject as number | null, tag_ids: [] as number[], template_id: '', participant_ids: [] as number[], observer_ids: [] as number[] });
 
   const submit = () => {
     if (!f.title.trim() && !f.template_id) return;

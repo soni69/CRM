@@ -5,7 +5,7 @@ import { SPRINT_STATUS_LABELS } from '@crm/contracts';
 import { useColumns } from '../../columns';
 import { PageSpinner, Badge, EmptyState } from '../../../shared/ui';
 import { BoardColumn } from '../../tasks/components/BoardColumn';
-import { useSelection } from '../../tasks/hooks';
+import { useSelection, useUpdateStatus } from '../../tasks/hooks';
 import { BulkBar } from '../../tasks/components/BulkBar';
 import { formatDate } from '../../../shared/utils/format';
 import { useMemo } from 'react';
@@ -20,6 +20,7 @@ export function SprintBoardPage() {
   });
   const nav = useNavigate();
   const sel = useSelection();
+  const setStatus = useUpdateStatus();
   const { data: columns = [] } = useColumns();
 
   const byStatus = useMemo(() => {
@@ -48,7 +49,7 @@ export function SprintBoardPage() {
         ) : (
           <div className="flex h-full gap-3 overflow-x-auto p-4">
             {byStatus.visible.map((c) => (
-              <BoardColumn key={c.key} column={c} tasks={byStatus.map.get(c.key) ?? []} onOpen={(id) => nav(`/tasks/${id}`)} selected={sel.selected} onSelect={sel.toggle} />
+              <BoardColumn key={c.key} column={c} tasks={byStatus.map.get(c.key) ?? []} onOpen={(id) => nav(`/tasks/${id}`)} selected={sel.selected} onSelect={sel.toggle} onDropTask={(id) => setStatus.mutate({ id, status: c.key })} />
             ))}
           </div>
         )}

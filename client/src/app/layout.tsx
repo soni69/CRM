@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../modules/auth';
 import { Avatar, Dropdown, DropdownItem, PageSpinner } from '../shared/ui';
 import { useTheme } from '../shared/hooks';
+import { NotificationBell } from '../modules/notifications';
 import { Logo } from './Logo';
 import { cn } from '../shared/utils/cn';
 import { ROLE_LABELS } from '@crm/contracts';
@@ -50,7 +52,21 @@ function ThemeButton({ collapsed }: { collapsed: boolean }) {
 export function Layout() {
   const { user, logout } = useAuth();
   const nav = useNavigate();
+  const qc = useQueryClient();
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('nav-collapsed') === '1');
+
+  // Живые обновления: сервер шлёт 'changed' после любой успешной записи —
+  // сбрасываем кэш с дебаунсом, чтобы всплеск событий был одним рефетчем
+  useEffect(() => {
+    const es = new EventSource('/api/events');
+    let t = 0;
+    es.addEventListener('changed', () => {
+      window.clearTimeout(t);
+      t = window.setTimeout(() => qc.invalidateQueries(), 300);
+    });
+    return () => { window.clearTimeout(t); es.close(); };
+  }, [qc]);
+
   if (!user) return <PageSpinner />;
 
   const toggleCollapsed = () => {
@@ -100,6 +116,7 @@ export function Layout() {
           ))}
         </nav>
         <div className={cn('flex flex-col gap-0.5 border-t border-border', collapsed ? 'p-2' : 'p-2.5')}>
+          <NotificationBell collapsed={collapsed} />
           <ThemeButton collapsed={collapsed} />
           <Dropdown
             align="left"

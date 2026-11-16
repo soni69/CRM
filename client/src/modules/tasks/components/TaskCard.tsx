@@ -24,6 +24,11 @@ export function TaskCard({ task, onOpen, selected, onSelect }: {
 
   return (
     <div
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData('application/x-task-id', String(task.id));
+        e.dataTransfer.effectAllowed = 'move';
+      }}
       className={cn(
         'group relative cursor-pointer rounded-lg border bg-raised p-3 shadow-soft transition-all hover:shadow-md',
         selected ? 'border-accent shadow-[0_0_0_1px_var(--accent)]' : 'border-border hover:border-border-strong',

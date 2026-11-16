@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 import { config } from './core/config.js';
+import { addClient, removeClient, broadcast } from './core/events.js';
 import { errorHandler, httpError } from './core/errors.js';
 import { authRouter, requireAuth } from './modules/auth/index.js';
 import { tasksRouter } from './modules/tasks/index.js';
@@ -21,6 +22,7 @@ import { searchRouter } from './modules/search/index.js';
 import { usersRouter } from './modules/users/index.js';
 import { columnsRouter } from './modules/columns/index.js';
 import { projectsRouter } from './modules/projects/index.js';
+import { notificationsRouter } from './modules/notifications/index.js';
 
 export const app = express();
 app.set('trust proxy', 1);
@@ -32,12 +34,29 @@ app.use(authRouter);
 
 // Всё остальное API — только после входа
 app.use('/api', requireAuth);
+
+// После любого успешного изменения рассылаем SSE-событие — клиенты обновят кэш
+app.use('/api', (req, res, next) => {
+  res.on('finish', () => {
+    if (req.method !== 'GET' && res.statusCode < 400) broadcast('changed', { path: req.path });
+  });
+  next();
+});
+
+app.get('/api/events', (req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
+  res.write('retry: 3000\n\n');
+  addClient(res);
+  const ping = setInterval(() => res.write(': ping\n\n'), 25_000);
+  req.on('close', () => { clearInterval(ping); removeClient(res); });
+});
+
 app.use([
   // transferRouter раньше tasksRouter: /api/tasks/export.csv и /api/tasks/import
   // не должны попадать под /api/tasks/:id
   transferRouter, tasksRouter, checklistsRouter, commentsRouter, filesRouter, historyRouter,
   tagsRouter, sprintsRouter, timetrackingRouter, templatesRouter,
-  reportsRouter, searchRouter, usersRouter, columnsRouter, projectsRouter,
+  reportsRouter, searchRouter, usersRouter, columnsRouter, projectsRouter, notificationsRouter,
 ]);
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));

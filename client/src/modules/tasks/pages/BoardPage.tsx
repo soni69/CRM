@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTasks, useSelection } from '../hooks';
+import { useTasks, useSelection, useUpdateStatus } from '../hooks';
 import { BoardColumn } from '../components/BoardColumn';
 import { TaskCard } from '../components/TaskCard';
 import type { TaskView } from '@crm/contracts';
@@ -24,6 +24,7 @@ export function BoardPage() {
   const openTask = (id: number) => nav(`/tasks/${id}`);
   const { filters, setFilter, reset, active } = useTaskFilters();
   const { data: all = [], isLoading } = useTasks();
+  const setStatus = useUpdateStatus();
   const filtered = useSearchTasks(filters, active > 0);
   const { data: users = [] } = useUsers();
   const { data: tags = [] } = useTags();
@@ -86,7 +87,7 @@ export function BoardPage() {
             {/* Десктоп: видимые колонки */}
             <div className="hidden h-full gap-3 overflow-x-auto p-4 sm:flex">
               {visible.map((c) => (
-                <BoardColumn key={c.key} column={c} tasks={byStatus.get(c.key) ?? []} onOpen={openTask} selected={sel.selected} onSelect={sel.toggle} />
+                <BoardColumn key={c.key} column={c} tasks={byStatus.get(c.key) ?? []} onOpen={openTask} selected={sel.selected} onSelect={sel.toggle} onDropTask={(id) => setStatus.mutate({ id, status: c.key })} />
               ))}
               {(byStatus.get('__other__')?.length ?? 0) > 0 && (
                 <section className="flex min-h-40 min-w-60 flex-1 basis-0 flex-col rounded-xl border border-border border-t-2 border-t-faint bg-surface">

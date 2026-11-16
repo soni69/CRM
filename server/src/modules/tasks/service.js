@@ -5,6 +5,7 @@ import {
 import { recordEvent } from '../history/index.js';
 import { columnByKey } from '../columns/index.js';
 import { projectExists } from '../projects/index.js';
+import { notify } from '../notifications/index.js';
 import { isProjectMember, isProjectLead } from '../roles/index.js';
 import {
   getTask, attachView, listTasks, memberKinds, createTaskRow, updateTaskRow,
@@ -56,6 +57,9 @@ export function createTask(user, data) {
 
   const id = tx(() => {
     const id = createTaskRow(data, user.id);
+    if (data.assignee_id && data.assignee_id !== user.id) {
+      notify(data.assignee_id, { task_id: id, type: 'assigned', title: 'Вам назначена задача', body: `«${data.title}»` });
+    }
     setTaskMembers(id, data.participant_ids ?? [], data.observer_ids ?? []);
     setTaskTags(id, data.tag_ids ?? []);
     recordEvent(id, user.id, 'created', { title: data.title });
@@ -110,6 +114,9 @@ export function updateTask(user, id, data) {
       recordEvent(id, user.id, 'tag', { tag_ids: data.tag_ids });
     }
   })();
+  if (diff.assignee_id && diff.assignee_id !== user.id) {
+    notify(diff.assignee_id, { task_id: id, type: 'assigned', title: 'Вам назначена задача', body: `«${task.title}»` });
+  }
   return attachView([getTask(id)])[0];
 }
 

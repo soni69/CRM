@@ -1,4 +1,5 @@
-import { firstColumnKey } from '../modules/columns/index.js';
+import { firstColumnKey, doneKeys } from '../modules/columns/index.js';
+import { checkDeadlines } from '../modules/notifications/index.js';
 import { q, tx, now } from './db.js';
 
 // Повторяющиеся задачи: когда next_run <= сегодня — создаём копию и сдвигаем дату.
@@ -43,7 +44,13 @@ function spawnRecurring() {
   if (due.length) console.log(`[scheduler] создано повторяющихся задач: ${due.length}`);
 }
 
+const deadlineCheck = () => {
+  try { checkDeadlines(doneKeys()); } catch (e) { console.error('[scheduler] notifications:', e.message); }
+};
+
 export function startScheduler() {
   spawnRecurring();
+  deadlineCheck();
   setInterval(spawnRecurring, 60_000).unref();
+  setInterval(deadlineCheck, 300_000).unref();
 }

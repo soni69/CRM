@@ -1,6 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTasks } from '../../tasks/hooks';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTasks, invalidateTasks } from '../../tasks/hooks';
+import { tasksApi } from '../../tasks/api';
+import type { TaskView } from '@crm/contracts';
 import { useUsers } from '../../users';
 import { useProjects } from '../../projects';
 import { PageSpinner, EmptyState, Avatar, Input, Select } from '../../../shared/ui';
@@ -41,6 +44,46 @@ export function GanttPage() {
   const [taskId, setTaskId] = useState('');
   const [rangeId, setRangeId] = useState<RangeId>('all');
   const [zoom, setZoom] = useState(1);
+  const [drag, setDrag] = useState<{ id: number; dx: number } | null>(null);
+  const qc = useQueryClient();
+  const move = useMutation({
+    mutationFn: ({ id, d }: { id: number; d: Record<string, string | null> }) => tasksApi.update(id, d),
+    onSuccess: () => invalidateTasks(qc),
+  });
+
+  const toDateStr = (ms: number) => {
+    const d = new Date(ms);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+  const toTimeStr = (ms: number) => {
+    const d = new Date(ms);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  };
+
+  // Перетаскивание бара: dx → круглые тики шкалы → PATCH дат
+  const startDrag = (e: React.MouseEvent, task: TaskView, fromMs: number, toMs: number) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const moveHandler = (ev: MouseEvent) => setDrag({ id: task.id, dx: ev.clientX - startX });
+    const upHandler = (ev: MouseEvent) => {
+      window.removeEventListener('mousemove', moveHandler);
+      window.removeEventListener('mouseup', upHandler);
+      const dx = ev.clientX - startX;
+      setDrag(null);
+      const delta = Math.round(dx / PX);
+      if (delta === 0) { nav(`/tasks/${task.id}`); return; }
+      const shift = delta * tickMs;
+      const d: Record<string, string | null> = {};
+      if (task.start_date) d.start_date = toDateStr(fromMs + shift);
+      if (task.due_date) {
+        d.due_date = toDateStr(toMs + shift);
+        if (tickMs === 36e5) d.due_time = toTimeStr(toMs + shift);
+      }
+      if (Object.keys(d).length) move.mutate({ id: task.id, d });
+    };
+    window.addEventListener('mousemove', moveHandler);
+    window.addEventListener('mouseup', upHandler);
+  };
   const range = RANGES.find((r) => r.id === rangeId)!;
 
   const filtered = useMemo(() => tasks.filter((t) =>
@@ -172,10 +215,16 @@ export function GanttPage() {
                     </button>
                     <div className="relative flex-1" style={{ width: W }}>
                       <div
-                        onClick={() => nav(`/tasks/${task.id}`)}
+                        onMouseDown={(e) => startDrag(e, task, fromMs, toMs)}
                         title={`${task.title} · ${colByKey(task.status)?.name ?? task.status} · ${from} → ${to}${task.due_time ? ' ' + task.due_time : ''}`}
-                        className="absolute top-[7px] h-5 cursor-pointer rounded-md opacity-90 transition-opacity hover:opacity-100"
-                        style={{ left, width: Math.max(PX * 0.6, right - left), background: colByKey(task.status)?.color ?? '#8d94a8' }}
+                        className="absolute top-[7px] h-5 cursor-grab rounded-md opacity-90 transition-opacity hover:opacity-100 active:cursor-grabbing"
+                        style={{
+                          left, width: Math.max(PX * 0.6, right - left),
+                          background: colByKey(task.status)?.color ?? '#8d94a8',
+                          transform: drag?.id === task.id ? `translateX(${drag.dx}px)` : undefined,
+                          opacity: drag?.id === task.id ? 0.75 : undefined,
+                          zIndex: drag?.id === task.id ? 5 : undefined,
+                        }}
                       />
                     </div>
                   </div>

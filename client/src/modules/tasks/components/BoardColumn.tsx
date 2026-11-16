@@ -7,13 +7,15 @@ import { tasksApi } from '../api';
 import { useColumns } from '../../columns';
 import { cn } from '../../../shared/utils/cn';
 
-export function BoardColumn({ column, tasks, onOpen, selected, onSelect }: {
+export function BoardColumn({ column, tasks, onOpen, selected, onSelect, onDropTask }: {
   column: BoardColumnT; tasks: TaskView[];
   onOpen: (id: number) => void; selected: Set<number>; onSelect: (id: number) => void;
+  onDropTask: (taskId: number) => void;
 }) {
   const create = useCreateTask();
   const { data: columns = [] } = useColumns();
   const [quick, setQuick] = useState('');
+  const [over, setOver] = useState(false);
   const firstKey = columns[0]?.key;
   const add = () => {
     const t = quick.trim();
@@ -29,7 +31,24 @@ export function BoardColumn({ column, tasks, onOpen, selected, onSelect }: {
 
   return (
     <section
-      className="flex min-h-40 min-w-60 flex-1 basis-0 flex-col rounded-xl border border-border border-t-2 bg-surface"
+      onDragOver={(e) => {
+        if (e.dataTransfer.types.includes('application/x-task-id')) {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          setOver(true);
+        }
+      }}
+      onDragLeave={() => setOver(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setOver(false);
+        const id = Number(e.dataTransfer.getData('application/x-task-id'));
+        if (id) onDropTask(id);
+      }}
+      className={cn(
+        'flex min-h-40 min-w-60 flex-1 basis-0 flex-col rounded-xl border border-t-2 bg-surface transition-colors',
+        over ? 'border-accent bg-accent-soft/40' : 'border-border',
+      )}
       style={{ borderTopColor: column.color }}
     >
       <header className="flex items-center justify-between px-3 py-2.5">

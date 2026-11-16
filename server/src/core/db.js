@@ -130,6 +130,17 @@ CREATE TABLE IF NOT EXISTS project_members (
   user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   PRIMARY KEY (project_id, user_id)
 );
+CREATE TABLE IF NOT EXISTS notifications (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  task_id    INTEGER REFERENCES tasks(id) ON DELETE CASCADE,
+  type       TEXT NOT NULL,
+  title      TEXT NOT NULL,
+  body       TEXT NOT NULL DEFAULT '',
+  read       INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, read);
 CREATE TABLE IF NOT EXISTS project_stages (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
@@ -177,6 +188,8 @@ export function migrate() {
   const projCols = db.prepare('PRAGMA table_info(projects)').all().map((c) => c.name);
   if (!projCols.includes('goal')) db.exec("ALTER TABLE projects ADD COLUMN goal TEXT NOT NULL DEFAULT ''");
   if (!projCols.includes('due_date')) db.exec('ALTER TABLE projects ADD COLUMN due_date TEXT');
+  const userCols2 = db.prepare('PRAGMA table_info(users)').all().map((c) => c.name);
+  if (!userCols2.includes('telegram_chat_id')) db.exec('ALTER TABLE users ADD COLUMN telegram_chat_id TEXT');
 
   // Новые роли: member→manager, manager→lead (через временную метку)
   const usersSql = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='users'").get()?.sql ?? '';

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTasks } from '../../tasks/hooks';
 import { useUsers } from '../../users';
+import { useProjects } from '../../projects';
 import { PageSpinner, EmptyState, Avatar, Input, Select } from '../../../shared/ui';
 import { useColumns, useColumnByKey } from '../../columns';
 import { cn } from '../../../shared/utils/cn';
@@ -29,12 +30,15 @@ const timeMs = (t?: string | null) => t ? Number(t.slice(0, 2)) * 36e5 + Number(
 export function GanttPage() {
   const { data: tasks = [], isLoading } = useTasks();
   const { data: users = [] } = useUsers();
+  const { data: projects = [] } = useProjects();
   const { data: columns = [] } = useColumns();
   const colByKey = useColumnByKey();
   const nav = useNavigate();
   const [q, setQ] = useState('');
   const [assignee, setAssignee] = useState('');
   const [status, setStatus] = useState('');
+  const [projectId, setProjectId] = useState('');
+  const [taskId, setTaskId] = useState('');
   const [rangeId, setRangeId] = useState<RangeId>('all');
   const [zoom, setZoom] = useState(1);
   const range = RANGES.find((r) => r.id === rangeId)!;
@@ -42,8 +46,16 @@ export function GanttPage() {
   const filtered = useMemo(() => tasks.filter((t) =>
     (!q || t.title.toLowerCase().includes(q.trim().toLowerCase())) &&
     (!assignee || t.assignee?.id === Number(assignee)) &&
-    (!status || t.status === status),
-  ), [tasks, q, assignee, status]);
+    (!status || t.status === status) &&
+    (!projectId || t.project_id === Number(projectId)) &&
+    (!taskId || t.id === Number(taskId)),
+  ), [tasks, q, assignee, status, projectId, taskId]);
+
+  const taskOptions = useMemo(() =>
+    tasks
+      .filter((t) => !projectId || t.project_id === Number(projectId))
+      .sort((a, b) => a.title.localeCompare(b.title, 'ru')),
+  [tasks, projectId]);
 
   // Окно времени + строки внутри него
   const { rows, winStart, W, PX, tickMs } = useMemo(() => {
@@ -94,6 +106,16 @@ export function GanttPage() {
         <Select value={status} onChange={(e) => setStatus(e.target.value)} className="h-8 w-auto text-xs">
           <option value="">Все статусы</option>
           {columns.map((c) => <option key={c.key} value={c.key}>{c.name}</option>)}
+        </Select>
+        {projects.length > 0 && (
+          <Select value={projectId} onChange={(e) => { setProjectId(e.target.value); setTaskId(''); }} className="h-8 w-auto max-w-44 text-xs">
+            <option value="">Все проекты</option>
+            {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </Select>
+        )}
+        <Select value={taskId} onChange={(e) => setTaskId(e.target.value)} className="h-8 w-auto max-w-48 text-xs">
+          <option value="">Все задачи</option>
+          {taskOptions.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
         </Select>
         <div className="ml-auto flex items-center gap-1 rounded-lg border border-border p-0.5" title="Масштаб шкалы">
           <button onClick={() => setZoom((z) => Math.max(0.4, +(z - 0.2).toFixed(1)))} className="rounded-md px-2 py-1 text-xs font-medium text-muted hover:bg-hover">−</button>

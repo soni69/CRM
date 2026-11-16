@@ -33,9 +33,11 @@ app.use(authRouter);
 // Всё остальное API — только после входа
 app.use('/api', requireAuth);
 app.use([
-  tasksRouter, checklistsRouter, commentsRouter, filesRouter, historyRouter,
+  // transferRouter раньше tasksRouter: /api/tasks/export.csv и /api/tasks/import
+  // не должны попадать под /api/tasks/:id
+  transferRouter, tasksRouter, checklistsRouter, commentsRouter, filesRouter, historyRouter,
   tagsRouter, sprintsRouter, timetrackingRouter, templatesRouter,
-  reportsRouter, transferRouter, searchRouter, usersRouter, columnsRouter, projectsRouter,
+  reportsRouter, searchRouter, usersRouter, columnsRouter, projectsRouter,
 ]);
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));

@@ -6,6 +6,9 @@ export const db = new Database(path.join(config.dataDir, 'crm.db'));
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
+// Регистронезависимый lower для Unicode (встроенный LOWER знает только ASCII)
+db.function('loweruni', { deterministic: true }, (s) => String(s ?? '').toLowerCase());
+
 // Короткие хелперы
 export const q = {
   all: (sql, ...params) => db.prepare(sql).all(...params),

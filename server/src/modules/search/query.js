@@ -29,9 +29,9 @@ export function searchTasks(user, params) {
   const args = [...vis.params];
 
   if (params.q) {
-    conds.push(`(t.title LIKE ? OR t.description LIKE ? OR EXISTS (
-      SELECT 1 FROM task_comments c WHERE c.task_id = t.id AND c.body LIKE ?))`);
-    const like = `%${params.q}%`;
+    conds.push(`(loweruni(t.title) LIKE ? OR loweruni(t.description) LIKE ? OR EXISTS (
+      SELECT 1 FROM task_comments c WHERE c.task_id = t.id AND loweruni(c.body) LIKE ?))`);
+    const like = `%${params.q.toLowerCase()}%`;
     args.push(like, like, like);
   }
   if (params.status) { conds.push('t.status = ?'); args.push(params.status); }

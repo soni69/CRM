@@ -9,6 +9,8 @@ export const boardColumnSchema = z.object({
   position: z.number(),
   is_done: z.number(),
   hidden: z.number(),
+  allowed_to: z.array(z.string()).nullable(),   // ключи колонок, куда можно перейти; null = без ограничений
+  auto_subtasks: z.array(z.string()),           // заготовки подзадач при входе в колонку
 });
 export type BoardColumn = z.infer<typeof boardColumnSchema>;
 
@@ -25,6 +27,8 @@ export const updateColumnSchema = z.object({
   color: colorHex.optional(),
   hidden: z.boolean().optional(),
   is_done: z.boolean().optional(),
+  allowed_to: z.array(z.string().min(1)).nullable().optional(),
+  auto_subtasks: z.array(z.string().trim().min(1).max(200)).optional(),
 });
 export type UpdateColumnInput = z.infer<typeof updateColumnSchema>;
 

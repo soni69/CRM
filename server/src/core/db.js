@@ -117,8 +117,10 @@ CREATE TABLE IF NOT EXISTS board_columns (
   name     TEXT NOT NULL,
   color    TEXT NOT NULL DEFAULT '#5e6ad2',
   position INTEGER NOT NULL DEFAULT 0,
-  is_done  INTEGER NOT NULL DEFAULT 0,
-  hidden   INTEGER NOT NULL DEFAULT 0
+  is_done       INTEGER NOT NULL DEFAULT 0,
+  hidden        INTEGER NOT NULL DEFAULT 0,
+  allowed_to    TEXT,
+  auto_subtasks TEXT NOT NULL DEFAULT '[]'
 );
 CREATE TABLE IF NOT EXISTS task_templates (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -151,6 +153,10 @@ export function migrate() {
     ins.run('in_progress', 'В работе', '#f2c94c', 1, 0);
     ins.run('done', 'Завершена', '#4cb782', 2, 1);
   }
+
+  const colCols = db.prepare('PRAGMA table_info(board_columns)').all().map((c) => c.name);
+  if (!colCols.includes('allowed_to')) db.exec('ALTER TABLE board_columns ADD COLUMN allowed_to TEXT');
+  if (!colCols.includes('auto_subtasks')) db.exec("ALTER TABLE board_columns ADD COLUMN auto_subtasks TEXT NOT NULL DEFAULT '[]'");
 
   // Статусы стали динамическими — убираем CHECK со tasks.status ребилдом
   const tableSql = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='tasks'").get()?.sql ?? '';

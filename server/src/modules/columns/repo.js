@@ -2,9 +2,15 @@ import crypto from 'node:crypto';
 import { q, tx } from '../../core/db.js';
 import { httpError } from '../../core/errors.js';
 
-export const listColumns = () => q.all('SELECT * FROM board_columns ORDER BY position');
-export const getColumn = (id) => q.get('SELECT * FROM board_columns WHERE id = ?', id);
-export const columnByKey = (key) => q.get('SELECT * FROM board_columns WHERE key = ?', key);
+const parse = (c) => c && ({
+  ...c,
+  allowed_to: c.allowed_to ? JSON.parse(c.allowed_to) : null,
+  auto_subtasks: JSON.parse(c.auto_subtasks ?? '[]'),
+});
+
+export const listColumns = () => q.all('SELECT * FROM board_columns ORDER BY position').map(parse);
+export const getColumn = (id) => parse(q.get('SELECT * FROM board_columns WHERE id = ?', id));
+export const columnByKey = (key) => parse(q.get('SELECT * FROM board_columns WHERE key = ?', key));
 export const firstColumnKey = () =>
   q.get('SELECT key FROM board_columns ORDER BY position LIMIT 1')?.key ?? 'new';
 export const doneKeys = () =>
@@ -19,14 +25,19 @@ export function createColumn({ name, color }) {
   return getColumn(Number(lastInsertRowid));
 }
 
-export function updateColumn(id, { name, color, hidden, is_done }) {
+export function updateColumn(id, { name, color, hidden, is_done, allowed_to, auto_subtasks }) {
   const col = getColumn(id);
   if (!col) throw httpError(404, 'Колонка не найдена');
+  const allowed = allowed_to === undefined
+    ? (col.allowed_to ? JSON.stringify(col.allowed_to) : null)
+    : (allowed_to ? JSON.stringify(allowed_to) : null);
   q.run(
-    'UPDATE board_columns SET name = ?, color = ?, hidden = ?, is_done = ? WHERE id = ?',
+    'UPDATE board_columns SET name = ?, color = ?, hidden = ?, is_done = ?, allowed_to = ?, auto_subtasks = ? WHERE id = ?',
     name ?? col.name, color ?? col.color,
     hidden === undefined ? col.hidden : Number(hidden),
     is_done === undefined ? col.is_done : Number(is_done),
+    allowed,
+    auto_subtasks === undefined ? JSON.stringify(col.auto_subtasks) : JSON.stringify(auto_subtasks),
     id,
   );
   return getColumn(id);

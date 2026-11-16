@@ -84,10 +84,23 @@ export function setStatus(user, id, status) {
   if (!canChangeStatus(user, task, memberKinds(task.id, user.id))) {
     throw httpError(403, 'Нет прав менять статус этой задачи');
   }
-  if (!columnByKey(status)) throw httpError(400, 'Неизвестный статус');
+  const target = columnByKey(status);
+  if (!target) throw httpError(400, 'Неизвестный статус');
+  const source = columnByKey(task.status);
+  if (source?.allowed_to && !source.allowed_to.includes(status)) {
+    throw httpError(400, `Из «${source.name}» нельзя перейти в «${target.name}» — запрещено правилами колонки`);
+  }
   tx(() => {
     updateTaskRow(id, { status });
     recordEvent(id, user.id, 'status', { from: task.status, to: status });
+    // Автоподзадачи при входе в колонку
+    for (const title of target.auto_subtasks) {
+      const { lastInsertRowid } = q.run(
+        `INSERT INTO tasks (title, status, priority, creator_id, parent_id) VALUES (?,?,?,?,?)`,
+        title, status, task.priority, user.id, task.id,
+      );
+      recordEvent(Number(lastInsertRowid), user.id, 'created', { via: 'column_automation', column: status });
+    }
   })();
   return attachView([getTask(id)])[0];
 }

@@ -74,13 +74,13 @@ export function Layout() {
           </NavLink>
           {!collapsed && (
             <button onClick={toggleCollapsed} className="rounded-md p-1.5 text-faint transition-colors hover:bg-hover hover:text-text" title="Скрыть меню">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3L5 8l5 5"/><path d="M3 3v10"/></svg>
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><rect x="1.5" y="2.5" width="13" height="11" rx="2"/><path d="M6 2.5v11"/></svg>
             </button>
           )}
         </div>
         {collapsed && (
           <button onClick={toggleCollapsed} className="mx-auto mb-1 rounded-md p-1.5 text-faint transition-colors hover:bg-hover hover:text-text" title="Показать меню">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3l5 5-5 5"/><path d="M13 3v10"/></svg>
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><rect x="1.5" y="2.5" width="13" height="11" rx="2"/><path d="M6 2.5v11"/></svg>
           </button>
         )}
         <nav className={cn('mt-1 flex flex-1 flex-col gap-0.5', collapsed ? 'px-2' : 'px-2.5')}>

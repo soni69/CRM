@@ -22,7 +22,9 @@ const RANGES = [
 type RangeId = (typeof RANGES)[number]['id'];
 
 const dstr = (d: Date) => d.toISOString().slice(0, 10);
-const dayMs = (d: string) => Date.parse(d + 'T00:00:00Z');
+// Локальная полночь даты — шкала тиков строится по локальному времени
+const dayMs = (d: string) => new Date(d + 'T00:00:00').getTime();
+const timeMs = (t?: string | null) => t ? Number(t.slice(0, 2)) * 36e5 + Number(t.slice(3, 5)) * 6e4 : 864e5;
 
 export function GanttPage() {
   const { data: tasks = [], isLoading } = useTasks();
@@ -49,7 +51,7 @@ export function GanttPage() {
       task: t,
       from: t.start_date ?? t.due_date ?? t.created_at.slice(0, 10),
       to: t.due_date ?? t.start_date ?? t.created_at.slice(0, 10),
-    })).map((r) => ({ ...r, fromMs: dayMs(r.from), toMs: dayMs(r.to) + 864e5 }))
+    })).map((r) => ({ ...r, fromMs: dayMs(r.from), toMs: dayMs(r.to) + timeMs(r.task.due_time) }))
       .sort((a, b) => a.fromMs - b.fromMs);
 
     let ws: number, we: number;
@@ -143,7 +145,7 @@ export function GanttPage() {
                     <div className="relative flex-1" style={{ width: W }}>
                       <div
                         onClick={() => nav(`/tasks/${task.id}`)}
-                        title={`${task.title} · ${colByKey(task.status)?.name ?? task.status} · ${from} → ${to}`}
+                        title={`${task.title} · ${colByKey(task.status)?.name ?? task.status} · ${from} → ${to}${task.due_time ? ' ' + task.due_time : ''}`}
                         className="absolute top-[7px] h-5 cursor-pointer rounded-md opacity-90 transition-opacity hover:opacity-100"
                         style={{ left, width: Math.max(PX * 0.6, right - left), background: colByKey(task.status)?.color ?? '#8d94a8' }}
                       />

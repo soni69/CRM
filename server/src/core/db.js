@@ -154,6 +154,10 @@ export function migrate() {
     ins.run('done', 'Завершена', '#4cb782', 2, 1);
   }
 
+  const userCols = db.prepare('PRAGMA table_info(users)').all().map((c) => c.name);
+  if (!userCols.includes('phone')) db.exec('ALTER TABLE users ADD COLUMN phone TEXT');
+  if (!userCols.includes('telegram')) db.exec('ALTER TABLE users ADD COLUMN telegram TEXT');
+
   const colCols = db.prepare('PRAGMA table_info(board_columns)').all().map((c) => c.name);
   if (!colCols.includes('allowed_to')) db.exec('ALTER TABLE board_columns ADD COLUMN allowed_to TEXT');
   if (!colCols.includes('auto_subtasks')) db.exec("ALTER TABLE board_columns ADD COLUMN auto_subtasks TEXT NOT NULL DEFAULT '[]'");

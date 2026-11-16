@@ -21,6 +21,10 @@ export function useUserMutations() {
       mutationFn: (v: { id: number; role: Parameters<typeof usersApi.setRole>[1] }) => usersApi.setRole(v.id, v.role),
       onSuccess: () => { toast('Роль обновлена'); inv(); }, onError: onErr,
     }),
+    update: useMutation({
+      mutationFn: ({ id, ...d }: { id: number } & Parameters<typeof usersApi.update>[1]) => usersApi.update(id, d),
+      onSuccess: () => { toast('Профиль сохранён'); inv(); qc.invalidateQueries({ queryKey: ['auth'] }); qc.invalidateQueries({ queryKey: ['me'] }); }, onError: onErr,
+    }),
     remove: useMutation({
       mutationFn: (id: number) => usersApi.remove(id),
       onSuccess: () => { toast('Пользователь удалён'); inv(); }, onError: onErr,

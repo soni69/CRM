@@ -5,7 +5,7 @@ import { BoardPage, TaskPage, NewTaskPage } from '../modules/tasks';
 import { GanttPage } from '../modules/gantt';
 import { SprintsPage, SprintBoardPage } from '../modules/sprints';
 import { ReportsPage } from '../modules/reports';
-import { UsersPage } from '../modules/users';
+import { UsersPage, ContactsPage } from '../modules/users';
 import { Layout } from './layout';
 
 function Protected() {
@@ -43,6 +43,7 @@ export const router = createBrowserRouter([
           { path: '/sprints/:id', element: <SprintBoardPage /> },
           { path: '/reports', element: <ReportsPage /> },
           { path: '/users', element: <UsersPage /> },
+          { path: '/contacts', element: <ContactsPage /> },
         ],
       },
     ],

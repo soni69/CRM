@@ -11,6 +11,7 @@ const NAV = [
   { to: '/gantt', label: 'Гант' },
   { to: '/sprints', label: 'Спринты' },
   { to: '/reports', label: 'Отчёты' },
+  { to: '/contacts', label: 'Команда' },
 ];
 
 export function Layout() {

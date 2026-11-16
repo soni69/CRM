@@ -2,10 +2,11 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { ROLES } from '@crm/contracts/user';
 import { createUserSchema } from '@crm/contracts/auth';
+import { updateProfileSchema } from '@crm/contracts/user';
 import { asyncH, parseBody, httpError } from '../../core/errors.js';
 import { requirePermission } from '../roles/index.js';
 import { createUser, findUserByEmail } from '../auth/index.js';
-import { listUsers, getUser, setUserRole, deleteUser } from './repo.js';
+import { listUsers, getUser, setUserRole, deleteUser, updateUser } from './repo.js';
 
 export const usersRouter = Router();
 
@@ -21,6 +22,18 @@ usersRouter.post('/api/users', requirePermission('user.manage'), asyncH(async (r
     throw httpError(409, 'Пользователь с таким email уже существует');
   }
   res.status(201).json({ user: createUser(data) });
+}));
+
+// Профиль: свой — любому пользователю, чужой — только с user.manage
+usersRouter.patch('/api/users/:id', asyncH(async (req, res) => {
+  const target = getUser(Number(req.params.id));
+  if (!target) throw httpError(404, 'Пользователь не найден');
+  if (target.id !== req.user.id && req.user.role !== 'admin') {
+    throw httpError(403, 'Можно редактировать только свой профиль');
+  }
+  const data = parseBody(updateProfileSchema, req.body);
+  updateUser(target.id, data);
+  res.json({ user: getUser(target.id) });
 }));
 
 usersRouter.patch('/api/users/:id/role', requirePermission('user.manage'), asyncH(async (req, res) => {

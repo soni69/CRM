@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../modules/auth';
 import { Avatar, Dropdown, DropdownItem, PageSpinner } from '../shared/ui';
@@ -28,12 +29,12 @@ const NAV = [
   { to: '/contacts', label: 'Команда', icon: icons.team },
 ];
 
-function ThemeButton() {
+function ThemeButton({ collapsed }: { collapsed: boolean }) {
   const { dark, toggle } = useTheme();
   return (
     <button
       onClick={toggle}
-      className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-muted transition-colors hover:bg-hover hover:text-text"
+      className={cn('flex w-full items-center rounded-lg py-2 text-sm font-medium text-muted transition-colors hover:bg-hover hover:text-text', collapsed ? 'justify-center px-0' : 'gap-2.5 px-2.5')}
       title={dark ? 'Светлая тема' : 'Тёмная тема'}
     >
       {dark ? (
@@ -41,7 +42,7 @@ function ThemeButton() {
       ) : (
         <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M13.5 9.5A5.5 5.5 0 0 1 6.5 2.5a5.5 5.5 0 1 0 7 7Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg>
       )}
-      {dark ? 'Светлая тема' : 'Тёмная тема'}
+      {!collapsed && (dark ? 'Светлая тема' : 'Тёмная тема')}
     </button>
   );
 }
@@ -49,42 +50,68 @@ function ThemeButton() {
 export function Layout() {
   const { user, logout } = useAuth();
   const nav = useNavigate();
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem('nav-collapsed') === '1');
   if (!user) return <PageSpinner />;
+
+  const toggleCollapsed = () => {
+    setCollapsed((c) => {
+      localStorage.setItem('nav-collapsed', c ? '0' : '1');
+      return !c;
+    });
+  };
 
   const items = [...NAV, ...(user.role === 'admin' ? [{ to: '/users', label: 'Пользователи', icon: icons.users }] : [])];
 
   return (
     <div className="flex h-full">
       {/* Левый сайдбар */}
-      <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-raised sm:flex">
-        <div className="px-4 pb-2 pt-4">
-          <NavLink to="/"><Logo size={22} /></NavLink>
+      <aside className={cn('hidden shrink-0 flex-col border-r border-border bg-raised transition-[width] duration-200 sm:flex', collapsed ? 'w-14' : 'w-56')}>
+        <div className={cn('flex items-center pb-2 pt-4', collapsed ? 'justify-center px-0' : 'justify-between px-4')}>
+          <NavLink to="/" title="TeamTasks">
+            {collapsed ? (
+              <svg width="22" height="22" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="var(--accent)"/><path d="M9 17.5l4.5 4.5L23 11.5" stroke="#fff" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            ) : <Logo size={22} />}
+          </NavLink>
+          {!collapsed && (
+            <button onClick={toggleCollapsed} className="rounded-md p-1.5 text-faint transition-colors hover:bg-hover hover:text-text" title="Скрыть меню">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3L5 8l5 5"/><path d="M3 3v10"/></svg>
+            </button>
+          )}
         </div>
-        <nav className="mt-2 flex flex-1 flex-col gap-0.5 px-2.5">
+        {collapsed && (
+          <button onClick={toggleCollapsed} className="mx-auto mb-1 rounded-md p-1.5 text-faint transition-colors hover:bg-hover hover:text-text" title="Показать меню">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3l5 5-5 5"/><path d="M13 3v10"/></svg>
+          </button>
+        )}
+        <nav className={cn('mt-1 flex flex-1 flex-col gap-0.5', collapsed ? 'px-2' : 'px-2.5')}>
           {items.map((n) => (
             <NavLink
               key={n.to} to={n.to} end={n.end}
+              title={collapsed ? n.label : undefined}
               className={({ isActive }) => cn(
-                'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors',
+                'flex items-center rounded-lg py-2 text-sm font-medium transition-colors',
+                collapsed ? 'justify-center px-0' : 'gap-2.5 px-2.5',
                 isActive ? 'bg-accent-soft text-accent-hover' : 'text-muted hover:bg-hover hover:text-text',
               )}
             >
               <span className="shrink-0">{n.icon}</span>
-              {n.label}
+              {!collapsed && n.label}
             </NavLink>
           ))}
         </nav>
-        <div className="flex flex-col gap-0.5 border-t border-border p-2.5">
-          <ThemeButton />
+        <div className={cn('flex flex-col gap-0.5 border-t border-border', collapsed ? 'p-2' : 'p-2.5')}>
+          <ThemeButton collapsed={collapsed} />
           <Dropdown
             align="left"
             trigger={
-              <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-hover">
+              <button className={cn('flex w-full items-center rounded-lg py-2 text-left transition-colors hover:bg-hover', collapsed ? 'justify-center px-0' : 'gap-2.5 px-2.5')} title={collapsed ? user.name : undefined}>
                 <Avatar name={user.name} id={user.id} size={24} />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium leading-tight">{user.name}</span>
-                  <span className="block truncate text-[11px] text-faint">{ROLE_LABELS[user.role]}</span>
-                </span>
+                {!collapsed && (
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium leading-tight">{user.name}</span>
+                    <span className="block truncate text-[11px] text-faint">{ROLE_LABELS[user.role]}</span>
+                  </span>
+                )}
               </button>
             }
           >
